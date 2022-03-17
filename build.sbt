@@ -15,5 +15,8 @@ lazy val root = (project in file("."))
       "com.typesafe.slick" %% "slick-hikaricp" % "3.3.2",
       "org.slf4j" % "slf4j-nop" % "1.6.4"
     ),
+    libraryDependencies ++= http4s.http4s,
+    libraryDependencies ++= circe.circe,
+    libraryDependencies ++= fs2.fs2,
     name := "Vegetable_warehouse"
   )

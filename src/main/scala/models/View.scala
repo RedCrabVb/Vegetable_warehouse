@@ -21,7 +21,7 @@ object View {
     EmployeeInfo(tuple6._1, tuple6._2, tuple6._3, tuple6._4, tuple6._5, tuple6._6)
   }
 
-  def selectInfo() = {
+  def clientInfo() = {
     sql"select * from clientinfo".as[(Int, String, Int)]
   }
 

@@ -1,4 +1,7 @@
+import Main.viewRoutes
+import cats.effect.{ExitCode, IO, IOApp}
 import models._
+import org.http4s.blaze.server.BlazeServerBuilder
 import slick.dbio.DBIOAction
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.PostgresProfile.api._
@@ -7,22 +10,23 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
-object Main {
+object Main extends IOApp with Routes {
+  val serverPort = 8080
+  println("Server start, for test: http://localhost:8080/hello")
+  val app = (
+    viewRoutes
+    ).orNotFound
 
-  def main(args: Array[String]): Unit = {
-    val db = Database.forConfig("mydb")
-    try {
-      val sql = DBIO.seq(
-        Tables.Goods.sortBy(_.idgoods).result.map(_.foreach(println(_))),
-        Procedure.sellGoods(5, 11, 29, Array(1), "01.03.3009"),
-        View.selectInfo().map(_.foreach(x => println(View.toClientInfo(x)))),
-        View.salesInfo().map(_.foreach(x => println(View.toSalesInfo(x)))),
-        View.employeeInfo().map(_.foreach(x => println(View.toEmployee(x))))
-      )
-      Await.result(db.run(sql), Duration.Inf)
+  val server = BlazeServerBuilder[IO]
+    .bindHttp(8080)
+    .withHttpApp(app)
 
+  val serverResource = server.resource
 
-    } finally db.close()
-    println("Hello world")
-  }
+  def run(args: List[String]): IO[ExitCode] =
+    server
+      .serve
+      .compile.drain
+      .as(ExitCode.Success)
+
 }
