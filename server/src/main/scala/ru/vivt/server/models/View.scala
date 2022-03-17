@@ -1,4 +1,4 @@
-package models
+package ru.vivt.server.models
 
 import slick.jdbc.PostgresProfile.api._
 

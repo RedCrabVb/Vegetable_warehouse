@@ -4,3 +4,4 @@ project/target/
 target/
 .bsp/
 .idea/
+server/src/main/resources/html/script/
