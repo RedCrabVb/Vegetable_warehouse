@@ -38,6 +38,7 @@ lazy val client_web =  (project in file("./webapp"))
     mainClass := webappMain,
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom"          % "1.1.0",
+      "com.lihaoyi" %%% "scalatags" % "0.8.6",
       "io.circe"     %%% "circe-core"           % "0.14.1",
       "io.circe"     %%% "circe-generic"        % "0.14.1",
       "io.circe"     %%% "circe-parser"         % "0.14.1",
@@ -47,3 +48,4 @@ lazy val client_web =  (project in file("./webapp"))
     ),
     scalaJSUseMainModuleInitializer := true
   )
+  .settings(artifactPath in(Compile, fastOptJS) := new File("./server/src/main/resources/html/script/main.js"))

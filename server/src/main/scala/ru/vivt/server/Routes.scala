@@ -2,14 +2,19 @@ package ru.vivt.server
 
 import cats.effect.IO
 import io.circe.generic.auto._
-import org.http4s.HttpRoutes
+import org.http4s.{HttpRoutes, MediaType, _}
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
 import ru.vivt.server.models.View
 import slick.jdbc.JdbcBackend.Database
 import cats.effect._
+
+import cats.effect._
+
 import org.http4s._
+
 import org.http4s.dsl.io._
+
 import java.io.File
 
 
@@ -46,20 +51,24 @@ trait Routes {
     }
   }
 
-  def static(file: String, request: Request[IO]) = {
-    println(file)
-    StaticFile.fromResource("/" + file, Some(request)).getOrElseF(NotFound())
+  def static(file: String, request: Request[IO])(mediaType: MediaType) = {
+    StaticFile.fromFile(new File("./server/src/main/resources/" + file), Some(request)).getOrElseF(NotFound())
   }
 
 
   def webRoutes: HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
       case req@GET -> Root / "script" / path => {
-        static(s"html/script/$path", req)
+        static(s"html/script/$path", req)(MediaType.text.javascript)
       }
-      case req@GET -> Root / "login" => {
-        static("html/static/login.html", req)
+      case req@GET -> Root / "style" / path => {
+        static(s"html/static/$path", req)(MediaType.text.css)
       }
+      case req@GET -> Root / path => {
+        val x: MediaType = MediaType.text.html
+        static(s"html/static/$path", req)(MediaType.text.html)
+      }
+
     }
   }
 }

@@ -4,7 +4,7 @@ import sbt._
 object Dependency {
   object version {
     val scala3Version = "2.13.0"
-    val http4sVersion = "1.0.0-M30"
+    val http4sVersion = "0.23.10"
     val fs2CoreVersion = "3.2.4"
     val circeVersion = "0.14.1"
   }
