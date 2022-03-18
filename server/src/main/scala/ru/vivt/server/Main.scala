@@ -10,7 +10,8 @@ object Main extends IOApp with Routes {
   println("Server start, for test: http://localhost:8080/hello")
   val app = (
     viewRoutes <+>
-      webRoutes
+      webRoutes <+>
+      accountRoutes
     ).orNotFound
 
   val server = BlazeServerBuilder[IO]

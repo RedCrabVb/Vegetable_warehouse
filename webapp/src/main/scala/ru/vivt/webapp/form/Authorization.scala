@@ -27,7 +27,7 @@ object Authorization {
   }
 
   @JSExportTopLevel("sendData")
-  def sendData(login: String = "", password: String = "", accountType: String = "") = {
+  def sendData(fields: Array[String]) = {
     println("sendData")
     //send data on registration
     //set status alert
@@ -74,14 +74,14 @@ object Authorization {
        |                   id="exampleInputPassword1">
        |        </div>
        |        Я являюсь:
-       |        <input type="button" class="btn btn-primary" onclick="addFormEmployee('$container', 'test', 'test')" text="сотрудник">сотрудник</input>
+       |        <button class="btn btn-primary" onclick="addFormEmployee('$container', 'test', 'test')">сотрудник</button>
        |        <button class="btn btn-primary" onclick="sendData()">клиент</button>
        |    </div>
        |""".stripMargin
   }
 
   def getBodyLoginIn(container: String) = {
-  s"""    <form action="login" method="post" id="$container">
+  s"""    <form action="/login" method="post" id="$container">
        |        <div class="mb-3">
        |            <label for="exampleInputEmail1" class="form-label">Имя пользователя</label>
        |            <input type="text" name="username" class="form-control"

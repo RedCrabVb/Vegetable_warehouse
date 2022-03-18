@@ -2,19 +2,15 @@ package ru.vivt.server
 
 import cats.effect.IO
 import io.circe.generic.auto._
-import org.http4s.{HttpRoutes, MediaType, _}
+import org.http4s.{HttpRoutes, MediaType, QueryParamDecoder, _}
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
-import ru.vivt.server.models.View
+import ru.vivt.server.models.{Procedure, Tables, View}
 import slick.jdbc.JdbcBackend.Database
 import cats.effect._
-
 import cats.effect._
-
-import org.http4s._
-
 import org.http4s.dsl.io._
-
+import slick.jdbc.PostgresProfile.api._
 import java.io.File
 
 
@@ -51,24 +47,56 @@ trait Routes {
     }
   }
 
-  def static(file: String, request: Request[IO])(mediaType: MediaType) = {
+  def static(file: String, request: Request[IO]) = {
     StaticFile.fromFile(new File("./server/src/main/resources/" + file), Some(request)).getOrElseF(NotFound())
   }
 
 
   def webRoutes: HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
-      case req@GET -> Root / "script" / path => {
-        static(s"html/script/$path", req)(MediaType.text.javascript)
-      }
-      case req@GET -> Root / "style" / path => {
-        static(s"html/static/$path", req)(MediaType.text.css)
-      }
-      case req@GET -> Root / path => {
-        val x: MediaType = MediaType.text.html
-        static(s"html/static/$path", req)(MediaType.text.html)
-      }
+      case req@GET -> Root / "script" / path =>
+        static(s"html/script/$path", req)
+      case req@GET -> Root / "style" / path =>
+        static(s"html/static/$path", req)
+      case req@GET -> Root / "app" / path =>
+        static(s"html/static/$path", req)
+      case req@GET -> Root / "bootstrap" / path2 / path =>
+        static(s"html/bootstrap-5.1.3-dist/$path2/$path", req)
+    }
+  }
 
+  def accountRoutes: HttpRoutes[IO] = {
+    HttpRoutes.of[IO] {
+//      case req@POST -> Root / "login" => {
+//        for {
+//          user <- req.as[String]
+//          keyValue <-IO (user.split("&").map(x => {val arr = x.split("="); (arr(0), arr(1)) }).toMap)
+//          _ <- IO(db.run(Procedure.registrationClient(keyValue("username"), keyValue("password"))))
+//          resp <- static(s"html/static/main.html", req)
+//        } yield resp
+//      }
+      case req@POST -> Root / "login" => {
+        for {
+          user <- req.as[String]
+          keyValue <-IO (user.split("&").map(x => {val arr = x.split("="); (arr(0), arr(1)) }).toMap)
+          authorizationTry <- IO.fromFuture(
+            IO({
+              println(keyValue)
+              db.run(Tables.User.filter(user =>
+                user.login === keyValue("username") &&
+                  user.password === keyValue("password")
+              ).result)
+            }
+            )
+          )
+          _ <- IO.println(authorizationTry.isEmpty)
+          resp <- (if (!authorizationTry.isEmpty) {
+            Ok(authorizationTry)
+          } else {
+            Forbidden("Not right data")
+          })
+        } yield resp
+      }
     }
   }
 }
