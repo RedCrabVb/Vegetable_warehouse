@@ -67,34 +67,43 @@ trait Routes {
 
   def accountRoutes: HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
-//      case req@POST -> Root / "login" => {
-//        for {
-//          user <- req.as[String]
-//          keyValue <-IO (user.split("&").map(x => {val arr = x.split("="); (arr(0), arr(1)) }).toMap)
-//          _ <- IO(db.run(Procedure.registrationClient(keyValue("username"), keyValue("password"))))
-//          resp <- static(s"html/static/main.html", req)
-//        } yield resp
-//      }
+      case req@POST -> Root / "registration" / "employee" =>
+        for {
+          user <- req.as[String]
+          keyValue <-IO (user.split("&").map(x => {val arr = x.split("="); (arr(0), arr(1)) }).toMap)
+          _ <- IO(db.run(Procedure.registrationEmployee(
+            keyValue("fullName"),
+            keyValue("passport"),
+            keyValue("position"),
+            keyValue("login"),
+            keyValue("password")
+          )))
+          resp <- Ok()
+        } yield resp
+      case req@POST -> Root / "registration" / "client" =>
+        for {
+          user <- req.as[String]
+          keyValue <-IO (user.split("&").map(x => {val arr = x.split("="); (arr(0), arr(1)) }).toMap)
+          _ <- IO(db.run(Procedure.registrationClient(keyValue("username"), keyValue("password"))))
+          resp <- Ok()
+        } yield resp
       case req@POST -> Root / "login" => {
         for {
           user <- req.as[String]
           keyValue <-IO (user.split("&").map(x => {val arr = x.split("="); (arr(0), arr(1)) }).toMap)
           authorizationTry <- IO.fromFuture(
-            IO({
-              println(keyValue)
+            IO{
               db.run(Tables.User.filter(user =>
                 user.login === keyValue("username") &&
                   user.password === keyValue("password")
               ).result)
             }
-            )
           )
-          _ <- IO.println(authorizationTry.isEmpty)
-          resp <- (if (!authorizationTry.isEmpty) {
+          resp <- if (!authorizationTry.isEmpty) {
             Ok(authorizationTry)
           } else {
             Forbidden("Not right data")
-          })
+          }
         } yield resp
       }
     }
