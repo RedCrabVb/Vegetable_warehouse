@@ -3,15 +3,20 @@ package ru.vivt.webapp.utils
 import org.scalajs.dom.{document, html}
 
 trait ItemHtml {
-  def addForm(container: String, getBody: String => String) = {
+  def addForm(container: String, getBody: String => String): Unit = {
+    addForm(container, getBody(container))
+  }
+
+  def addForm(container: String, getBody: String): Unit = {
     val containerTag = document.getElementById(container)
     if (containerTag != null) {
-      containerTag.innerHTML = getBody(container)
+      containerTag.innerHTML = getBody
+    } else {
+      println(s"containerTag $container not found")
     }
   }
 
   def getInput(name: String): String = {
-    println("name: " + name)
     document.getElementById(name).asInstanceOf[html.Input].value
   }
 
