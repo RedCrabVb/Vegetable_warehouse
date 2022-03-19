@@ -16,7 +16,7 @@ trait NavigationBar {
        |                        <a class="nav-link" href="/app/goods.html">Товары</a>
        |                    </li>
        |                    <li class="nav-item">
-       |                        <a class="nav-link" href="/api/sellGoods">Продать товар</a>
+       |                        <a class="nav-link" href="/app/sellGoods.html">Продать товар</a>
        |                    </li>
        |                    <li class="nav-item">
        |                        <a class="nav-link" href="/app/clientInfo.html">Посмотреть информацию о клиентах</a>

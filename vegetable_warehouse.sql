@@ -5,7 +5,7 @@
 -- Dumped from database version 14.2 (Debian 14.2-1.pgdg110+1)
 -- Dumped by pg_dump version 14.1
 
--- Started on 2022-03-17 19:40:25
+-- Started on 2022-03-19 21:29:17
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -19,7 +19,51 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 237 (class 1255 OID 17169)
+-- TOC entry 238 (class 1255 OID 25395)
+-- Name: registration_client(character varying, character varying); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE public.registration_client(IN login_in character varying, IN password_in character varying)
+    LANGUAGE plpgsql
+    AS $$declare
+begin
+  with user_id_req as (
+      insert into "User" ("login", "password") values (login_in, password_in) returning "id_user"
+  ) insert into "Client" ("idUser", amount) values (
+      (select "id_user" from "user_id_req"),
+      1000
+  );
+end;
+$$;
+
+
+ALTER PROCEDURE public.registration_client(IN login_in character varying, IN password_in character varying) OWNER TO postgres;
+
+--
+-- TOC entry 237 (class 1255 OID 25396)
+-- Name: registration_employee(character varying, character varying, character varying, character varying, character varying); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE public.registration_employee(IN full_name_in character varying, IN passport_in character varying, IN position_in character varying, IN login_in character varying, IN "password_In" character varying)
+    LANGUAGE plpgsql
+    AS $$declare
+begin
+  with user_id_req as (
+      insert into "User" ("login", "password") values (login_in, "password_In") returning "id_user"
+  ) insert into "Employee" ("idUser", full_name, passport, "idPosition") values (
+      (select "id_user" from "user_id_req"),
+      full_name_in,
+      passport_in,
+      (select "idPosition" from "Position" where "namePosition" = position_in)
+  );
+end;
+$$;
+
+
+ALTER PROCEDURE public.registration_employee(IN full_name_in character varying, IN passport_in character varying, IN position_in character varying, IN login_in character varying, IN "password_In" character varying) OWNER TO postgres;
+
+--
+-- TOC entry 239 (class 1255 OID 17169)
 -- Name: sell_goods(bigint, bigint, bigint, date, bigint[]); Type: PROCEDURE; Schema: public; Owner: postgres
 --
 
@@ -31,19 +75,19 @@ declare
     amountVAR bigint := 0;
 begin
  select "amount"  into amountVAR from "Client" where "idClient" = "idClinetIN";
- update "Client" set amount = (CASE 
+ update "Client" set amount = (CASE
                                     WHEN amountVAR > "sumIN" THEN amountVAR - "sumIN"
-                                    WHEN amountVAR <= "sumIN" THEN amountVAR 
+                                    WHEN amountVAR <= "sumIN" THEN amountVAR
                                     END) where "idClient" = "idClinetIN";
- 
+
  with idPaymentsIN as (
- 	insert into public."Payments" ("paymentDate", "orderCompletionMark", "paymentAmount") values ("datePay", (CASE 
-                                    WHEN amountVAR > "sumIN" THEN 1 
+ 	insert into public."Payments" ("paymentDate", "orderCompletionMark", "paymentAmount") values ("datePay", (CASE
+                                    WHEN amountVAR > "sumIN" THEN 1
                                     WHEN amountVAR <= "sumIN" THEN 0
                                     END), "sumIN") returning *
- ) 
+ )
  (select "idPayments" into idPaymentsVAR from idPaymentsIN);
- 
+
  for i in 1 .. array_upper("idGoodsIN", 1) loop
 	raise notice 'counter: %', "idGoodsIN"[i];
     insert into "Sales" ("idSaller", "idClient", "idPayments", "idGoods") values ("idSellerIN", "idClinetIN", idPaymentsVAR, "idGoodsIN"[i]);
@@ -324,37 +368,16 @@ CREATE VIEW public.salesinfo AS
 
 ALTER TABLE public.salesinfo OWNER TO postgres;
 
---
--- TOC entry 3375 (class 0 OID 17059)
--- Dependencies: 213
--- Data for Name: Client; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public."Client" ("idClient", "idUser", amount) FROM stdin;
-4	4	-127
-6	6	91
-3	5	300
-5	8	61
-\.
-
 
 --
--- TOC entry 3374 (class 0 OID 17052)
+-- TOC entry 3378 (class 0 OID 17052)
 -- Dependencies: 212
 -- Data for Name: Employee; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."Employee" ("idEmployee", full_name, passport, "idPosition", "idUser") FROM stdin;
-11	Алексей М.С.	{id ...}	1	1
-12	Дмитрий К.Р.	{id ...}	1	2
-13	Светлана Е.М.	{id ...}	1	4
-15	Виктория Е.М.	{id ...}	2	9
-16	Алексей В.В.	{id ...}	5	3
-\.
-
 
 --
--- TOC entry 3371 (class 0 OID 17031)
+-- TOC entry 3375 (class 0 OID 17031)
 -- Dependencies: 209
 -- Data for Name: Goods; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -373,70 +396,9 @@ COPY public."Goods" ("idGoods", "nameGoods", characteristics, note) FROM stdin;
 \.
 
 
---
--- TOC entry 3376 (class 0 OID 17064)
--- Dependencies: 214
--- Data for Name: Payments; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public."Payments" ("idPayments", "paymentDate", "orderCompletionMark", "paymentAmount") FROM stdin;
-20	2022-02-02	1	200
-22	2022-02-03	1	220
-23	2022-02-03	1	40
-24	2022-02-03	1	40
-29	2022-02-03	1	40
-30	2022-02-04	1	70
-31	2022-06-02	1	90
-32	2022-06-02	1	90
-33	2022-08-02	1	77
-34	2022-08-02	1	77
-35	2022-08-02	1	77
-36	2022-08-02	1	77
-37	2022-08-02	1	77
-38	2022-08-02	1	77
-39	2022-08-02	1	77
-40	2022-08-02	1	77
-41	2022-08-02	1	77
-42	2022-08-02	1	77
-43	2022-08-02	1	77
-44	2022-08-02	1	20
-45	2022-08-02	1	20
-46	2010-02-01	1	20
-47	2009-02-01	1	20
-48	2009-02-01	1	29
-49	2009-02-01	1	29
-50	2009-02-01	1	29
-51	2009-02-01	1	29
-52	3009-03-01	1	29
-53	1999-01-01	1	22
-54	1999-01-01	1	22
-55	0001-01-01 BC	1	22
-56	0001-01-01 BC	1	22
-58	0001-01-01 BC	1	22
-60	0001-01-01 BC	1	999
-61	0001-01-01 BC	0	999
-62	0001-01-01 BC	1	800
-63	0001-01-01 BC	0	800
-64	0001-01-01 BC	0	800
-66	1990-01-01	0	1100
-67	1990-01-01	1	200
-68	1990-01-01	1	200
-69	1990-01-01	1	300
-70	1990-01-01	0	300
-71	1990-01-01	0	300
-72	1990-01-01	0	300
-73	3009-03-01	1	29
-74	3009-03-01	1	29
-75	3009-03-01	1	29
-76	3009-03-01	1	29
-77	3009-03-01	1	29
-78	3009-03-01	1	29
-79	3009-03-01	1	29
-\.
-
 
 --
--- TOC entry 3372 (class 0 OID 17038)
+-- TOC entry 3376 (class 0 OID 17038)
 -- Dependencies: 210
 -- Data for Name: Position; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -451,125 +413,27 @@ COPY public."Position" ("idPosition", "namePosition", salary, note) FROM stdin;
 \.
 
 
---
--- TOC entry 3377 (class 0 OID 17069)
--- Dependencies: 215
--- Data for Name: Sales; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public."Sales" ("idSaller", "idClient", "idPayments", "idGoods") FROM stdin;
-13	4	20	1
-12	5	22	2
-12	5	23	3
-12	5	24	1
-12	5	29	3
-12	5	29	4
-12	5	30	6
-12	5	30	2
-12	5	30	3
-12	5	31	5
-12	5	32	5
-13	4	33	5
-13	4	34	5
-13	4	35	5
-13	4	36	5
-13	4	37	5
-13	4	38	5
-13	4	39	5
-13	4	40	5
-13	4	41	5
-13	4	42	5
-13	4	43	5
-13	4	44	5
-13	4	45	2
-13	4	46	2
-13	4	47	2
-11	6	48	3
-11	6	49	3
-11	6	50	3
-11	6	50	6
-11	6	50	2
-11	5	51	3
-11	5	51	6
-11	5	51	2
-11	5	52	3
-11	5	52	6
-11	5	52	2
-11	5	53	10
-11	5	54	10
-11	5	55	10
-11	5	56	10
-11	6	58	10
-11	6	60	10
-11	6	61	10
-11	6	62	9
-11	6	63	7
-11	6	64	7
-12	6	66	7
-12	3	67	7
-12	3	68	5
-12	3	68	7
-12	3	69	5
-12	3	69	7
-12	3	70	1
-12	3	70	2
-12	3	71	1
-12	3	71	2
-12	3	72	1
-12	3	72	2
-11	5	73	3
-11	5	73	6
-11	5	73	2
-11	5	74	3
-11	5	74	6
-11	5	74	2
-11	5	75	1
-11	5	76	1
-11	5	77	1
-11	5	78	1
-11	5	79	1
-\.
-
 
 --
--- TOC entry 3373 (class 0 OID 17045)
--- Dependencies: 211
--- Data for Name: User; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public."User" (id_user, login, password) FROM stdin;
-1	admin	password
-2	user	pass
-3	alex	fs29vsfds
-4	Svetlana	pass
-5	test	tset
-6	Alice	pass
-7	Dmitry	vas43
-8	Maxim	pass
-9	Victoria	asfd43
-\.
-
-
---
--- TOC entry 3389 (class 0 OID 0)
+-- TOC entry 3393 (class 0 OID 0)
 -- Dependencies: 216
 -- Name: Client_idClient_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Client_idClient_seq"', 6, true);
+SELECT pg_catalog.setval('public."Client_idClient_seq"', 0, true);
 
 
 --
--- TOC entry 3390 (class 0 OID 0)
+-- TOC entry 3394 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: Employee_idEmployee_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Employee_idEmployee_seq"', 16, true);
+SELECT pg_catalog.setval('public."Employee_idEmployee_seq"', 0, true);
 
 
 --
--- TOC entry 3391 (class 0 OID 0)
+-- TOC entry 3395 (class 0 OID 0)
 -- Dependencies: 218
 -- Name: Goods_idGoods_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -578,16 +442,16 @@ SELECT pg_catalog.setval('public."Goods_idGoods_seq"', 10, true);
 
 
 --
--- TOC entry 3392 (class 0 OID 0)
+-- TOC entry 3396 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: Payments_idPayments_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Payments_idPayments_seq"', 79, true);
+SELECT pg_catalog.setval('public."Payments_idPayments_seq"', 0, true);
 
 
 --
--- TOC entry 3393 (class 0 OID 0)
+-- TOC entry 3397 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: Position_idPosition_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -596,16 +460,16 @@ SELECT pg_catalog.setval('public."Position_idPosition_seq"', 6, true);
 
 
 --
--- TOC entry 3394 (class 0 OID 0)
+-- TOC entry 3398 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: User_idUser_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."User_idUser_seq"', 9, true);
+SELECT pg_catalog.setval('public."User_idUser_seq"', 0, true);
 
 
 --
--- TOC entry 3219 (class 2606 OID 17063)
+-- TOC entry 3223 (class 2606 OID 17063)
 -- Name: Client Client_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -614,7 +478,7 @@ ALTER TABLE ONLY public."Client"
 
 
 --
--- TOC entry 3217 (class 2606 OID 17058)
+-- TOC entry 3221 (class 2606 OID 17058)
 -- Name: Employee Employee_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -623,7 +487,7 @@ ALTER TABLE ONLY public."Employee"
 
 
 --
--- TOC entry 3211 (class 2606 OID 17037)
+-- TOC entry 3213 (class 2606 OID 17037)
 -- Name: Goods Goods_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -632,7 +496,7 @@ ALTER TABLE ONLY public."Goods"
 
 
 --
--- TOC entry 3221 (class 2606 OID 17068)
+-- TOC entry 3225 (class 2606 OID 17068)
 -- Name: Payments Payments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -641,7 +505,7 @@ ALTER TABLE ONLY public."Payments"
 
 
 --
--- TOC entry 3213 (class 2606 OID 17044)
+-- TOC entry 3215 (class 2606 OID 17044)
 -- Name: Position Position_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -650,7 +514,7 @@ ALTER TABLE ONLY public."Position"
 
 
 --
--- TOC entry 3215 (class 2606 OID 17051)
+-- TOC entry 3217 (class 2606 OID 17051)
 -- Name: User User_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -659,7 +523,16 @@ ALTER TABLE ONLY public."User"
 
 
 --
--- TOC entry 3224 (class 2606 OID 17082)
+-- TOC entry 3219 (class 2606 OID 25402)
+-- Name: User login; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."User"
+    ADD CONSTRAINT login UNIQUE (login);
+
+
+--
+-- TOC entry 3228 (class 2606 OID 17082)
 -- Name: Client Client_idUser_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -668,7 +541,7 @@ ALTER TABLE ONLY public."Client"
 
 
 --
--- TOC entry 3223 (class 2606 OID 17077)
+-- TOC entry 3227 (class 2606 OID 17077)
 -- Name: Employee Employee_idPosition_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -677,7 +550,7 @@ ALTER TABLE ONLY public."Employee"
 
 
 --
--- TOC entry 3222 (class 2606 OID 17072)
+-- TOC entry 3226 (class 2606 OID 17072)
 -- Name: Employee Employee_idUser_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -686,7 +559,7 @@ ALTER TABLE ONLY public."Employee"
 
 
 --
--- TOC entry 3225 (class 2606 OID 17087)
+-- TOC entry 3229 (class 2606 OID 17087)
 -- Name: Sales Sales_idClient_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -695,7 +568,7 @@ ALTER TABLE ONLY public."Sales"
 
 
 --
--- TOC entry 3227 (class 2606 OID 17097)
+-- TOC entry 3231 (class 2606 OID 17097)
 -- Name: Sales Sales_idGoods_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -704,7 +577,7 @@ ALTER TABLE ONLY public."Sales"
 
 
 --
--- TOC entry 3226 (class 2606 OID 17092)
+-- TOC entry 3230 (class 2606 OID 17092)
 -- Name: Sales Sales_idPayments_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -713,7 +586,7 @@ ALTER TABLE ONLY public."Sales"
 
 
 --
--- TOC entry 3228 (class 2606 OID 17102)
+-- TOC entry 3232 (class 2606 OID 17102)
 -- Name: Sales Sales_idSaller_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -721,7 +594,7 @@ ALTER TABLE ONLY public."Sales"
     ADD CONSTRAINT "Sales_idSaller_fkey" FOREIGN KEY ("idSaller") REFERENCES public."Employee"("idEmployee") NOT VALID;
 
 
--- Completed on 2022-03-17 19:40:25
+-- Completed on 2022-03-19 21:29:17
 
 --
 -- PostgreSQL database dump complete

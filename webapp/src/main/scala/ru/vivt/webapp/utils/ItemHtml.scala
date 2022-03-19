@@ -31,4 +31,13 @@ trait ItemHtml {
     })
   }
 
+  def getInputDataList(container: String): Option[String] = {
+    val containerTag = document.getElementById(container).asInstanceOf[html.Input]
+    Option(try {
+      containerTag.value
+    } catch {
+      case e: NumberFormatException => null
+    })
+  }
+
 }
