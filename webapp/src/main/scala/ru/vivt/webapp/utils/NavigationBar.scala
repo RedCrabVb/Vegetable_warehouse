@@ -19,10 +19,10 @@ trait NavigationBar {
        |                        <a class="nav-link" href="/api/sellGoods">Продать товар</a>
        |                    </li>
        |                    <li class="nav-item">
-       |                        <a class="nav-link" href="/api/view/clientInfo">Посмотреть информацию о клиентах</a>
+       |                        <a class="nav-link" href="/app/clientInfo.html">Посмотреть информацию о клиентах</a>
        |                    </li>
        |                    <li class="nav-item">
-       |                        <a class="nav-link" href="/api/view/clientInfo">История операций</a>
+       |                        <a class="nav-link" href="/app/historySales.html">История операций</a>
        |                    </li>
        |                </ul>
        |                <div class="navbar-nav ms-auto mb-2 mb-lg-1" >

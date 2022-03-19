@@ -26,19 +26,19 @@ trait Routes {
         for {
           resp <- Ok("Hello")
         } yield resp
-      case req@GET -> Root / "api" / "view" / "sales" => {
+      case req@POST -> Root / "api" / "view" / "sales" => {
         for {
           salesInfo <- IO.fromFuture(IO(db.run(View.salesInfo())))
           resp <- Ok(IO(salesInfo.map(x => View.toSalesInfo(x))))
         } yield (resp)
       }
-      case req@GET -> Root / "api" / "view" / "employee" => {
+      case req@POST -> Root / "api" / "view" / "employee" => {
         for {
           salesInfo <- IO.fromFuture(IO(db.run(View.employeeInfo())))
           resp <- Ok(IO(salesInfo.map(x => View.toEmployee(x))))
         } yield (resp)
       }
-      case req@GET -> Root / "api" / "view" / "client" => {
+      case req@POST -> Root / "api" / "view" / "client" => {
         for {
           salesInfo <- IO.fromFuture(IO(db.run(View.clientInfo())))
           resp <- Ok(IO(salesInfo.map(x => View.toClientInfo(x))))
