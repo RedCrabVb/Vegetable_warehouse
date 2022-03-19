@@ -2,6 +2,7 @@ package ru.vivt.webapp.form
 
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.{document, window}
+import ru.vivt.webapp.form.GoodsForm.addFormError
 import ru.vivt.webapp.utils.ItemHtml
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -24,35 +25,31 @@ object AuthorizationForm extends ItemHtml {
   }
 
   @JSExportTopLevel("addFormEmployee")
-  def addFormEmployee(container: String, login: String, password: String, alertContainer: String) = {
-    addForm(container, getBodyEmployee(_, login, password, alertContainer))
+  def addFormEmployee(container: String, login: String, password: String, containerAlert: String) = {
+    addForm(container, getBodyEmployee(_, login, password, containerAlert))
   }
 
   @JSExportTopLevel("authorization")
-  def authorization(login: String, password: String, alertContainer: String): Unit = {
+  def authorization(login: String, password: String, containerAlert: String): Unit = {
     Ajax.post("/login", s"username=${getInput(login)}&password=${getInput(password)}")
       .onComplete {
         case Success(xhr) =>
           println(xhr.responseText)
           window.location.replace("/app/main.html")
         case Failure(_) =>
-          if (alertContainer.nonEmpty) {
-            document.getElementById(alertContainer).innerHTML = "Ошибка при авторизации"
-          }
+          addFormError(containerAlert, "Ошибка при авторизации")
       }
   }
 
   @JSExportTopLevel("registrationClient")
-  def registrationClient(login: String, password: String, alertContainer: String): Unit = {
+  def registrationClient(login: String, password: String, containerAlert: String): Unit = {
     Ajax.post("/registration/client", s"username=${getInput(login)}&password=${getInput(password)}")
       .onComplete {
         case Success(xhr) =>
           println(xhr.responseText)
           window.location.replace("/app/login.html")
         case Failure(_) =>
-          if (alertContainer.nonEmpty) {
-            document.getElementById(alertContainer).innerHTML = "Ошибка при регестрации"
-          }
+          addFormError(containerAlert, "Ошибка при регестрации")
       }
   }
 
@@ -62,26 +59,28 @@ object AuthorizationForm extends ItemHtml {
                            fullName: String,
                            passport: String,
                            position: String,
-                           alertContainer: String): Unit = {
-    Ajax.post("/registration/employee",
-      s"login=$login" +
-        s"&password=$password" +
-        s"&fullName=${getInput("fullname-input")}" +
-        s"&passport=${getInput("passport")}" +
-        s"&position=${getInputSelection("position-input")}")
-      .onComplete {
-        case Success(xhr) =>
-          println(xhr.responseText)
-          window.location.replace("/app/login.html")
-        case Failure(_) =>
-          if (alertContainer.nonEmpty) {
-            document.getElementById(alertContainer).innerHTML = "Ошибка при регестрации"
-          }
-      }
+                           containerAlert: String): Unit = {
+    if (getInputSelection(position).isEmpty) {
+      addFormError(containerAlert, "Выберите должность сотрудника")
+    } else {
+      Ajax.post("/registration/employee",
+        s"login=$login" +
+          s"&password=$password" +
+          s"&fullName=${getInput(fullName)}" +
+          s"&passport=${getInput(passport)}" +
+          s"&position=${getInputSelection(position).get}")
+        .onComplete {
+          case Success(xhr) =>
+            println(xhr.responseText)
+            window.location.replace("/app/login.html")
+          case Failure(_) =>
+            addFormError(containerAlert, "Ошибка при регестрации")
+        }
+    }
   }
 
 
-  def getBodyEmployee(container: String, login: String, password: String, alertContainer: String): String = {
+  def getBodyEmployee(container: String, login: String, password: String, containerAlert: String): String = {
     s"""
        |<div form="$container">
        |        <div class="mb-3">
@@ -101,10 +100,10 @@ object AuthorizationForm extends ItemHtml {
        |        <button class="btn btn-primary" onClick="registrationEmployee(
        |          '${getInput(login)}',
        |          '${getInput(password)}',
-       |          'fullName-input',
+       |          'fullname-input',
        |          'passport',
        |          'position-input',
-       |          '${alertContainer}')">Отправить</button>
+       |          '$containerAlert')">Зарегистрироваться</button>
        |    </div>
        |""".stripMargin
   }

@@ -5,6 +5,6 @@ import ru.vivt.webapp.utils.{ItemHtml, NavigationBar}
 
 class AnyPage extends NavigationBar with ItemHtml {
   def process(): Unit = {
-    addForm("alert", getNavBar())
+    addForm("nav-bar-container", getNavBar())
   }
 }

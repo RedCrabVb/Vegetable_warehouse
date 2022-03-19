@@ -71,21 +71,23 @@ trait Routes {
         for {
           user <- req.as[String]
           keyValue <-IO (user.split("&").map(x => {val arr = x.split("="); (arr(0), arr(1)) }).toMap)
-          _ <- IO(db.run(Procedure.registrationEmployee(
+          _ <- IO.println(keyValue)
+          result <- IO.fromFuture(IO(db.run(Procedure.registrationEmployee(
             keyValue("fullName"),
             keyValue("passport"),
             keyValue("position"),
             keyValue("login"),
             keyValue("password")
-          )))
-          resp <- Ok()
+          ))))
+          _ <- IO.println(result)
+          resp <- Ok(result)
         } yield resp
       case req@POST -> Root / "registration" / "client" =>
         for {
           user <- req.as[String]
           keyValue <-IO (user.split("&").map(x => {val arr = x.split("="); (arr(0), arr(1)) }).toMap)
-          _ <- IO(db.run(Procedure.registrationClient(keyValue("username"), keyValue("password"))))
-          resp <- Ok()
+          result <- IO.fromFuture(IO(db.run(Procedure.registrationClient(keyValue("username"), keyValue("password")))))
+          resp <- Ok(result)
         } yield resp
       case req@POST -> Root / "login" => {
         for {

@@ -22,6 +22,9 @@ trait NavigationBar {
        |                        <a class="nav-link" href="/app/clientInfo.html">Посмотреть информацию о клиентах</a>
        |                    </li>
        |                    <li class="nav-item">
+       |                        <a class="nav-link" href="/app/employeeInfo.html">Посмотреть информацию о сотрудниках</a>
+       |                    </li>
+       |                    <li class="nav-item">
        |                        <a class="nav-link" href="/app/historySales.html">История операций</a>
        |                    </li>
        |                </ul>

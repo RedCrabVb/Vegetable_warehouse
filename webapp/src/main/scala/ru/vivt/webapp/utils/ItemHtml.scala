@@ -16,14 +16,19 @@ trait ItemHtml {
     }
   }
 
-  def getInput(name: String): String = {
-    document.getElementById(name).asInstanceOf[html.Input].value
+  def getInput(id: String): String = {
+    println("Get input: " + id)
+    document.getElementById(id).asInstanceOf[html.Input].value
   }
 
-  def getInputSelection(container: String): String = {
+  def getInputSelection(container: String): Option[String] = {
     val containerTag = document.getElementById(container).asInstanceOf[html.Select]
-    val index: Int = containerTag.value.toInt;
-    containerTag.options.apply(index).text;
+    Option(try {
+      val index: Int = containerTag.value.toInt
+      containerTag.options.apply(index).text
+    } catch {
+      case e: NumberFormatException => null
+    })
   }
 
 }
