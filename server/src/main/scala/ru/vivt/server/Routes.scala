@@ -108,4 +108,15 @@ trait Routes {
       }
     }
   }
+
+  def apiRoots: HttpRoutes[IO] = {
+    HttpRoutes.of[IO] {
+      case req@POST -> Root / "api" / "goods" => {
+        for {
+          goods <- IO.fromFuture(IO(db.run(Tables.Goods.result)))
+          resp <- Ok(goods)
+        } yield resp
+      }
+    }
+  }
 }

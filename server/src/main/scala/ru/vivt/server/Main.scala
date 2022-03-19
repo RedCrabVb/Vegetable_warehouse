@@ -11,7 +11,8 @@ object Main extends IOApp with Routes {
   val app = (
     viewRoutes <+>
       webRoutes <+>
-      accountRoutes
+      accountRoutes <+>
+      apiRoots
     ).orNotFound
 
   val server = BlazeServerBuilder[IO]

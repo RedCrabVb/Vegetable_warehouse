@@ -1,12 +1,8 @@
 package ru.vivt.server.models
 
 import slick.jdbc.PostgresProfile.api._
-
 import java.sql.Date
-
-case class ClientInfo(idClient: Int, login: String, amount: Int)
-case class SalesInfo(nameSales: String, loginUser: String, paymentDate: String, orderCompletionMark: Boolean, amount: Int, goodsName: String)
-case class EmployeeInfo(idEmployee: Int, fullName: String, login: String, passport: String, position: String, salary: Int)
+import ru.vivt.commons._
 
 object View {
   def toClientInfo(tuple3: (Int, String, Int)) = {

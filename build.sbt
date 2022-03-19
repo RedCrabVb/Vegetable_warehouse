@@ -13,6 +13,9 @@ lazy val root = Project(id = "Vegetable_warehouse", base = file("."))
     client_web
   )
 
+lazy val commons = (project in file("commons"))
+  .disablePlugins(AssemblyPlugin)
+
 lazy val servermain = Some("ru.vivt.server.Main")
 
 lazy val server = (project in file("server"))
@@ -28,7 +31,7 @@ lazy val server = (project in file("server"))
     libraryDependencies ++= http4s.http4s,
     libraryDependencies ++= circe.circe,
     libraryDependencies ++= fs2.fs2
-  )
+  ).dependsOn(commons)
 
 val webappMain = Some("ru.vivt.webapp.Main")
 
@@ -49,3 +52,4 @@ lazy val client_web =  (project in file("./webapp"))
     scalaJSUseMainModuleInitializer := true
   )
   .settings(artifactPath in(Compile, fastOptJS) := new File("./server/src/main/resources/html/script/main.js"))
+  .dependsOn(commons)
