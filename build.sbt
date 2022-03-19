@@ -14,7 +14,7 @@ lazy val root = Project(id = "Vegetable_warehouse", base = file("."))
   )
 
 lazy val commons = (project in file("commons"))
-  .disablePlugins(AssemblyPlugin)
+  .enablePlugins(ScalaJSPlugin)
 
 lazy val servermain = Some("ru.vivt.server.Main")
 

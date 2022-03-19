@@ -4,7 +4,7 @@ trait Table {
   def simpleTable(header: Array[String], rows: Array[Array[String]]): String = {
 
     val headerHtml = {
-      val col = (for (head <- header) yield {s"<th scope='col'>$head</th>"}).mkString("\n")
+      val col = (for (head <- header) yield s"<th scope='col'>$head</th>").mkString("\n")
       s"""
          |<thead>
          |  <tr>
@@ -16,7 +16,7 @@ trait Table {
 
     val rowHtml: String = {
       (for (row <- rows.zipWithIndex) yield {
-        val rowsHtml = (for (r <- row._1) yield {println(r); s"<td scope='row'>$r</td>"}).mkString("\n")
+        val rowsHtml = (for (r <- row._1) yield s"<td scope='row'>$r</td>").mkString("\n")
         s"""
            |<tr>
            |  <th scope="row">${row._2}</th>

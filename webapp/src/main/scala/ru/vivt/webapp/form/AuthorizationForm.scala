@@ -1,49 +1,17 @@
 package ru.vivt.webapp.form
 
-import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
-import org.scalajs.dom.{document, html, window}
+import org.scalajs.dom.{document, window}
 import ru.vivt.webapp.utils.ItemHtml
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.util.{Failure, Success}
-import io.circe.generic.auto._
-import io.circe.jawn.decode
-import org.scalajs.dom.document
-import org.scalajs.dom.ext.Ajax
-//import ru.vivt.commons.Goods
-import ru.vivt.webapp.form.GoodsForm.simpleTable
-import cats.implicits.catsSyntaxEitherId
-import io.circe.jawn.decode
-import io.circe.parser.parse
-import io.circe.{Decoder, Encoder, HCursor, Json}
-import io.circe.syntax._
 
-case class Goods(idgoods: Int, namegoods: String, characteristics: String, note: Option[String])
 
 
 object AuthorizationForm extends ItemHtml {
-  @JSExportTopLevel("addFormGoods")
-  def addFormGoods(container: String, alertContainer: String): Unit = {
-    Ajax.post("/api/goods", "")
-      .onComplete {
-        case Success(xhr) =>
-          val goods = (decode[Array[Goods]](xhr.responseText) match {
-            case Right(goodsRes) =>
-              goodsRes
-            case Left(error) =>
-              ???
-          })
-          val header = Array("idGoods", "nameGoods", "characteristics", "note")
-          val rows: Array[Array[String]] = goods.map(g => Array[String](g.idgoods.toString ,g.namegoods, g.characteristics, g.note.getOrElse(null)))
-          document.getElementById(container).innerHTML = simpleTable(header, rows)
-        case Failure(_) =>
-          if (alertContainer.nonEmpty) {
-            document.getElementById(alertContainer).innerHTML = "Ошибка при регестрации"
-          }
-      }
-  }
+
 
   @JSExportTopLevel("addFormAuthorization")
   def addFormAuthorization(container: String, containerAlert: String) = {
