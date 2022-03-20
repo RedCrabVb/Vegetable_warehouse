@@ -8,12 +8,15 @@ import slick.jdbc.PostgresProfile.api._
 import slick.sql.SqlAction
 
 import scala.concurrent.Await
+import scala.util.Try
 
 object DataBaseUtil {
   val db = Database.forConfig("mydb")
 
   def toKeyValue(str: String): Map[String, String] = {
-    str.split("&").map(x => {val arr = x.split("="); (arr(0), arr(1)) }).toMap
+    str.split("&").map(x => {
+      val arr = x.split("="); (arr(0), Try(arr(1)).getOrElse(null))
+    }).toMap
   }
 
   def getUser(login: String, password: String): Option[models.Tables.UserRow] = {

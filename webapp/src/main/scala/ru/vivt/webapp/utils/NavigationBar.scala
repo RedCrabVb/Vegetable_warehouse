@@ -29,7 +29,7 @@ trait NavigationBar {
        |                    </li>
        |                </ul>
        |                <div class="navbar-nav ms-auto mb-2 mb-lg-1" >
-       |                    <button class="btn btn-outline-secondary" onclick="logout">Выход</button>
+       |                    <button class="btn btn-outline-secondary" onclick="logout()">Выход</button>
        |                </div>
        |            </div>
        |        </div>

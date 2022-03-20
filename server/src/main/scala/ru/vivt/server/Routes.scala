@@ -1,9 +1,12 @@
 package ru.vivt.server
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import io.circe.generic.auto._
+import org.http4s.CacheDirective.`no-cache`
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
+import org.http4s.headers.`Cache-Control`
 import org.http4s.{HttpRoutes, _}
 import ru.vivt.server.models.DataBaseUtil._
 import ru.vivt.server.models.{Procedure, Tables, View}
@@ -41,7 +44,9 @@ trait Routes {
   }
 
   def static(file: String, request: Request[IO]) = {
-    StaticFile.fromFile(new File("./server/src/main/resources/" + file), Some(request)).getOrElseF(NotFound())
+    StaticFile.fromFile(new File("./server/src/main/resources/" + file), Some(request))
+      .map(_.addHeader(`Cache-Control`(NonEmptyList(`no-cache`(), Nil))))
+      .getOrElseF(NotFound())
   }
 
 
@@ -75,6 +80,10 @@ trait Routes {
         } yield resp
       case req@GET -> Root / "login" =>
         static(s"html/static/login.html", req)
+      case req@GET -> Root / "logout" =>
+        static(s"html/static/login.html", req)
+          .map(_.addHeader(`Cache-Control`(NonEmptyList(`no-cache`(), Nil))))
+          .map(_.removeCookie("authcookie"))
       case req@GET -> Root / "bootstrap" / path2 / path =>
         static(s"html/bootstrap-5.1.3-dist/$path2/$path", req)
     }
