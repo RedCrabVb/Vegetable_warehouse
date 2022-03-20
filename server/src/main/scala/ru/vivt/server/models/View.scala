@@ -1,7 +1,7 @@
 package ru.vivt.server.models
 
 import slick.jdbc.PostgresProfile.api._
-import java.sql.Date
+import java.sql.Timestamp
 import ru.vivt.commons._
 
 object View {
@@ -9,7 +9,7 @@ object View {
     ClientInfo(tuple3._1, tuple3._2, tuple3._3)
   }
 
-  def toSalesInfo(tuple6: (String, String, Date, Int, Int, String)) = {
+  def toSalesInfo(tuple6: (String, String, Timestamp, Int, Int, String)) = {
     SalesInfo(tuple6._1 ,tuple6._2, tuple6._3.toString, tuple6._4 == 1, tuple6._5, tuple6._6)
   }
 
@@ -22,7 +22,7 @@ object View {
   }
 
   def salesInfo() = {
-    sql"select * from salesinfo".as[(String, String, Date, Int, Int, String)]
+    sql"select * from salesinfo".as[(String, String, Timestamp, Int, Int, String)]
   }
 
   def employeeInfo() = {

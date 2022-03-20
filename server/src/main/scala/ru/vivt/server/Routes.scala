@@ -13,6 +13,8 @@ import ru.vivt.server.models.{Procedure, Tables, View}
 import slick.jdbc.PostgresProfile.api._
 
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.{Calendar, TimeZone}
 
 trait Routes {
   val dsl: Http4sDsl[IO] = Http4sDsl[IO]
@@ -130,6 +132,7 @@ trait Routes {
     }
   }
 
+  val format: SimpleDateFormat = new SimpleDateFormat("YYYY-MM-dd hh:mm:ss")
   def apiRoots: HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
       case POST -> Root / "api" / "goods" =>
@@ -141,6 +144,19 @@ trait Routes {
         for {
           position <- IO.fromFuture(IO(db.run(Tables.Position.result)))
           resp <- Ok(position)
+        } yield resp
+      case req@POST -> Root / "api" / "sellGoods" =>
+        for {
+          cookie <- IO(req.cookies.filter(_.name == "authcookie").map(_.content).mkString("&"))
+          body <- req.as[String]
+          keyValue <- IO(toKeyValue(cookie + "&" + body))
+          _ <- IO.println(keyValue)
+          _ <- IO.fromFuture(IO(db.run(Procedure.sellGoods(
+            getClientOnLogin(keyValue("client")).idclient.toInt,
+            getEmployee(getUser(keyValue("username"), keyValue("password")).get).idemployee.toInt,
+            keyValue("sum").toInt,
+            keyValue("goods").split(",").map(_.toInt), format.format(Calendar.getInstance(TimeZone.getTimeZone("Europe/Moscow")).getTime())))))
+          resp <- Ok(keyValue)
         } yield resp
     }
   }

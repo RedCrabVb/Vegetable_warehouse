@@ -2,8 +2,8 @@ package ru.vivt.webapp.form
 
 import io.circe.generic.auto._
 import io.circe.jawn.decode
-import org.scalajs.dom.ext.Ajax
-import org.scalajs.dom.{document, html}
+import org.scalajs.dom.ext.{Ajax, pimpRichAnimatedNumber}
+import org.scalajs.dom.{document, html, window}
 import ru.vivt.commons.{ClientInfo, Goods}
 import ru.vivt.webapp.utils.{AlertMessage, ItemHtml}
 
@@ -76,10 +76,17 @@ object SellGoodsForm extends ItemHtml with AlertMessage {
     }
 
     val idGoods = getAllOption(document.getElementById(containerGoods).innerHTML).mkString(",")
-    println(idGoods)
-    s"""client=${getInput(containerClient)}
-       |&sum=${getInput(containerSum)}
-       |&goods=${idGoods}""".stripMargin
+
+    println(s"client=${getInput(containerClient)}&sum=${getInput(containerSum)}&goods=${idGoods}")
+
+
+    Ajax.post("/api/sellGoods", s"client=${getInput(containerClient)}&sum=${getInput(containerSum)}&goods=${idGoods}")
+      .onComplete {
+        case Success(xhr) =>
+          println("/api/sellGoods resp = " + xhr.responseText)
+          window.location.replace("/app/sellGoods")
+        case Failure(exception) => println("addGoodsList error: " + exception)
+      }
   }
 
 

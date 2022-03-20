@@ -15,7 +15,8 @@ object Procedure {
   }
 
   def sellGoods(idClient: Int, idSeller: Int, sum: Int, idGoods: Array[Int], date: String): SqlAction[Int, NoStream, Effect] = {
-    sqlu"call sell_goods($idClient::bigint, $idSeller::bigint, $sum::bigint, to_date($date, 'DD.MM.YYYY'), $idGoods)"
+    println(s"call sell_goods($idClient::bigint, $idSeller::bigint, $sum::bigint, to_TIMESTAMP($date, 'YYYY-MM-DD HH24:MI:SS'), $idGoods)")
+    sqlu"call sell_goods($idClient::bigint, $idSeller::bigint, $sum::bigint, to_TIMESTAMP($date, 'YYYY-MM-DD HH24:MI:SS'), $idGoods)"
   }
 
   def registrationEmployee(fullName: String, passport: String, position: String, login: String, password: String ) = {

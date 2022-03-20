@@ -37,6 +37,20 @@ object DataBaseUtil {
     runQ(q).orNull._2
   }
 
+  def getClientOnLogin(login: String) = {
+    import models.Tables._
+
+    val q = (Client join User on (_.iduser === _.idUser) filter(_._2.login === login)).result.headOption
+    runQ(q).orNull._1
+  }
+
+  def getEmployee(user: models.Tables.UserRow) = {
+   import models.Tables._
+
+   val q = Employee.filter(_.iduser === user.idUser).result.headOption
+   runQ(q).orNull
+  }
+
   def checkPrivileges(keyValue: Map[String, String], level: Int): IO[Either[String, String]] = {
     lazy val user = getUser(keyValue("username"), keyValue("password"))
     lazy val checkUser = (keyValue.contains("username") && keyValue.contains("password")
