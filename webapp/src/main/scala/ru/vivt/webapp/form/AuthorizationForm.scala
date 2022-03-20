@@ -35,7 +35,7 @@ object AuthorizationForm extends ItemHtml {
       .onComplete {
         case Success(xhr) =>
           println(xhr.responseText)
-          window.location.replace("/app/main.html")
+          window.location.replace("/app/main")
         case Failure(_) =>
           addFormError(containerAlert, "Ошибка при авторизации")
       }
@@ -47,7 +47,7 @@ object AuthorizationForm extends ItemHtml {
       .onComplete {
         case Success(xhr) =>
           println(xhr.responseText)
-          window.location.replace("/app/login.html")
+          window.location.replace("/login")
         case Failure(_) =>
           addFormError(containerAlert, "Ошибка при регестрации")
       }
@@ -72,7 +72,7 @@ object AuthorizationForm extends ItemHtml {
         .onComplete {
           case Success(xhr) =>
             println(xhr.responseText)
-            window.location.replace("/app/login.html")
+            window.location.replace("/login")
           case Failure(_) =>
             addFormError(containerAlert, "Ошибка при регестрации")
         }
