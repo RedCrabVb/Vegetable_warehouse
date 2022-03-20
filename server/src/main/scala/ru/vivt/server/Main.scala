@@ -7,7 +7,7 @@ import org.http4s.implicits._
 
 object Main extends IOApp with Routes {
   val serverPort = 8080
-  println("Server start, for test: http://localhost:8080/hello")
+  println(s"Server start, for test: http://localhost:$serverPort/hello")
   val app = (
     viewRoutes <+>
       webRoutes <+>
@@ -16,7 +16,7 @@ object Main extends IOApp with Routes {
     ).orNotFound
 
   val server = BlazeServerBuilder[IO]
-    .bindHttp(8080)
+    .bindHttp(serverPort)
     .withHttpApp(app)
 
   val serverResource = server.resource

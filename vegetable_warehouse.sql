@@ -5,7 +5,7 @@
 -- Dumped from database version 14.2 (Debian 14.2-1.pgdg110+1)
 -- Dumped by pg_dump version 14.1
 
--- Started on 2022-03-19 21:29:17
+-- Started on 2022-03-20 19:19:10
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -20,7 +20,7 @@ SET row_security = off;
 
 --
 -- TOC entry 238 (class 1255 OID 25395)
--- Name: registration_client(character varying, character varying); Type: PROCEDURE; Schema: public; Owner: postgres
+-- Name: registration_client(character varying, character varying); Type: PROCEDURE; Schema: public; Owner: -
 --
 
 CREATE PROCEDURE public.registration_client(IN login_in character varying, IN password_in character varying)
@@ -37,11 +37,9 @@ end;
 $$;
 
 
-ALTER PROCEDURE public.registration_client(IN login_in character varying, IN password_in character varying) OWNER TO postgres;
-
 --
 -- TOC entry 237 (class 1255 OID 25396)
--- Name: registration_employee(character varying, character varying, character varying, character varying, character varying); Type: PROCEDURE; Schema: public; Owner: postgres
+-- Name: registration_employee(character varying, character varying, character varying, character varying, character varying); Type: PROCEDURE; Schema: public; Owner: -
 --
 
 CREATE PROCEDURE public.registration_employee(IN full_name_in character varying, IN passport_in character varying, IN position_in character varying, IN login_in character varying, IN "password_In" character varying)
@@ -60,14 +58,12 @@ end;
 $$;
 
 
-ALTER PROCEDURE public.registration_employee(IN full_name_in character varying, IN passport_in character varying, IN position_in character varying, IN login_in character varying, IN "password_In" character varying) OWNER TO postgres;
-
 --
--- TOC entry 239 (class 1255 OID 17169)
--- Name: sell_goods(bigint, bigint, bigint, date, bigint[]); Type: PROCEDURE; Schema: public; Owner: postgres
+-- TOC entry 239 (class 1255 OID 33569)
+-- Name: sell_goods(bigint, bigint, bigint, timestamp with time zone, bigint[]); Type: PROCEDURE; Schema: public; Owner: -
 --
 
-CREATE PROCEDURE public.sell_goods(IN "idClinetIN" bigint, IN "idSellerIN" bigint, IN "sumIN" bigint, IN "datePay" date, IN "idGoodsIN" bigint[])
+CREATE PROCEDURE public.sell_goods(IN "idClinetIN" bigint, IN "idSellerIN" bigint, IN "sumIN" bigint, IN "datePay" timestamp with time zone, IN "idGoodsIN" bigint[])
     LANGUAGE plpgsql
     AS $$
 declare
@@ -96,14 +92,12 @@ begin
 end; $$;
 
 
-ALTER PROCEDURE public.sell_goods(IN "idClinetIN" bigint, IN "idSellerIN" bigint, IN "sumIN" bigint, IN "datePay" date, IN "idGoodsIN" bigint[]) OWNER TO postgres;
-
 --
--- TOC entry 236 (class 1255 OID 17163)
--- Name: sell_goods(bigint, bigint, bigint, date, bigint); Type: PROCEDURE; Schema: public; Owner: postgres
+-- TOC entry 236 (class 1255 OID 33568)
+-- Name: sell_goods(bigint, bigint, bigint, timestamp with time zone, bigint); Type: PROCEDURE; Schema: public; Owner: -
 --
 
-CREATE PROCEDURE public.sell_goods(IN "idClinetIN" bigint, IN "idSellerIN" bigint, IN "sumIN" bigint, IN "datePay" date, IN "idGoodsIN" bigint)
+CREATE PROCEDURE public.sell_goods(IN "idClinetIN" bigint, IN "idSellerIN" bigint, IN "sumIN" bigint, IN "datePay" timestamp with time zone, IN "idGoodsIN" bigint)
     LANGUAGE plpgsql
     AS $$
 declare
@@ -113,15 +107,13 @@ begin
 end; $$;
 
 
-ALTER PROCEDURE public.sell_goods(IN "idClinetIN" bigint, IN "idSellerIN" bigint, IN "sumIN" bigint, IN "datePay" date, IN "idGoodsIN" bigint) OWNER TO postgres;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
 -- TOC entry 213 (class 1259 OID 17059)
--- Name: Client; Type: TABLE; Schema: public; Owner: postgres
+-- Name: Client; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."Client" (
@@ -131,11 +123,9 @@ CREATE TABLE public."Client" (
 );
 
 
-ALTER TABLE public."Client" OWNER TO postgres;
-
 --
 -- TOC entry 216 (class 1259 OID 17107)
--- Name: Client_idClient_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: Client_idClient_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public."Client" ALTER COLUMN "idClient" ADD GENERATED ALWAYS AS IDENTITY (
@@ -150,7 +140,7 @@ ALTER TABLE public."Client" ALTER COLUMN "idClient" ADD GENERATED ALWAYS AS IDEN
 
 --
 -- TOC entry 212 (class 1259 OID 17052)
--- Name: Employee; Type: TABLE; Schema: public; Owner: postgres
+-- Name: Employee; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."Employee" (
@@ -162,11 +152,9 @@ CREATE TABLE public."Employee" (
 );
 
 
-ALTER TABLE public."Employee" OWNER TO postgres;
-
 --
 -- TOC entry 219 (class 1259 OID 17110)
--- Name: Employee_idEmployee_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: Employee_idEmployee_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public."Employee" ALTER COLUMN "idEmployee" ADD GENERATED ALWAYS AS IDENTITY (
@@ -181,7 +169,7 @@ ALTER TABLE public."Employee" ALTER COLUMN "idEmployee" ADD GENERATED ALWAYS AS 
 
 --
 -- TOC entry 209 (class 1259 OID 17031)
--- Name: Goods; Type: TABLE; Schema: public; Owner: postgres
+-- Name: Goods; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."Goods" (
@@ -192,11 +180,9 @@ CREATE TABLE public."Goods" (
 );
 
 
-ALTER TABLE public."Goods" OWNER TO postgres;
-
 --
 -- TOC entry 218 (class 1259 OID 17109)
--- Name: Goods_idGoods_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: Goods_idGoods_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public."Goods" ALTER COLUMN "idGoods" ADD GENERATED ALWAYS AS IDENTITY (
@@ -211,22 +197,20 @@ ALTER TABLE public."Goods" ALTER COLUMN "idGoods" ADD GENERATED ALWAYS AS IDENTI
 
 --
 -- TOC entry 214 (class 1259 OID 17064)
--- Name: Payments; Type: TABLE; Schema: public; Owner: postgres
+-- Name: Payments; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."Payments" (
     "idPayments" bigint NOT NULL,
-    "paymentDate" date,
+    "paymentDate" timestamp with time zone,
     "orderCompletionMark" smallint,
     "paymentAmount" bigint
 );
 
 
-ALTER TABLE public."Payments" OWNER TO postgres;
-
 --
 -- TOC entry 221 (class 1259 OID 17117)
--- Name: Payments_idPayments_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: Payments_idPayments_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public."Payments" ALTER COLUMN "idPayments" ADD GENERATED ALWAYS AS IDENTITY (
@@ -241,7 +225,7 @@ ALTER TABLE public."Payments" ALTER COLUMN "idPayments" ADD GENERATED ALWAYS AS 
 
 --
 -- TOC entry 210 (class 1259 OID 17038)
--- Name: Position; Type: TABLE; Schema: public; Owner: postgres
+-- Name: Position; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."Position" (
@@ -252,11 +236,9 @@ CREATE TABLE public."Position" (
 );
 
 
-ALTER TABLE public."Position" OWNER TO postgres;
-
 --
 -- TOC entry 220 (class 1259 OID 17111)
--- Name: Position_idPosition_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: Position_idPosition_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public."Position" ALTER COLUMN "idPosition" ADD GENERATED ALWAYS AS IDENTITY (
@@ -271,7 +253,7 @@ ALTER TABLE public."Position" ALTER COLUMN "idPosition" ADD GENERATED ALWAYS AS 
 
 --
 -- TOC entry 215 (class 1259 OID 17069)
--- Name: Sales; Type: TABLE; Schema: public; Owner: postgres
+-- Name: Sales; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."Sales" (
@@ -282,11 +264,9 @@ CREATE TABLE public."Sales" (
 );
 
 
-ALTER TABLE public."Sales" OWNER TO postgres;
-
 --
 -- TOC entry 211 (class 1259 OID 17045)
--- Name: User; Type: TABLE; Schema: public; Owner: postgres
+-- Name: User; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."User" (
@@ -296,11 +276,9 @@ CREATE TABLE public."User" (
 );
 
 
-ALTER TABLE public."User" OWNER TO postgres;
-
 --
 -- TOC entry 217 (class 1259 OID 17108)
--- Name: User_idUser_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: User_idUser_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public."User" ALTER COLUMN id_user ADD GENERATED ALWAYS AS IDENTITY (
@@ -315,7 +293,7 @@ ALTER TABLE public."User" ALTER COLUMN id_user ADD GENERATED ALWAYS AS IDENTITY 
 
 --
 -- TOC entry 222 (class 1259 OID 17173)
--- Name: clientinfo; Type: VIEW; Schema: public; Owner: postgres
+-- Name: clientinfo; Type: VIEW; Schema: public; Owner: -
 --
 
 CREATE VIEW public.clientinfo AS
@@ -326,11 +304,9 @@ CREATE VIEW public.clientinfo AS
      JOIN public."User" usr ON ((usr.id_user = "Client"."idUser")));
 
 
-ALTER TABLE public.clientinfo OWNER TO postgres;
-
 --
--- TOC entry 224 (class 1259 OID 25360)
--- Name: employeeinfo; Type: VIEW; Schema: public; Owner: postgres
+-- TOC entry 223 (class 1259 OID 25360)
+-- Name: employeeinfo; Type: VIEW; Schema: public; Owner: -
 --
 
 CREATE VIEW public.employeeinfo AS
@@ -345,11 +321,9 @@ CREATE VIEW public.employeeinfo AS
      JOIN public."User" usr ON ((usr.id_user = "Employee"."idUser")));
 
 
-ALTER TABLE public.employeeinfo OWNER TO postgres;
-
 --
--- TOC entry 223 (class 1259 OID 25355)
--- Name: salesinfo; Type: VIEW; Schema: public; Owner: postgres
+-- TOC entry 224 (class 1259 OID 33560)
+-- Name: salesinfo; Type: VIEW; Schema: public; Owner: -
 --
 
 CREATE VIEW public.salesinfo AS
@@ -366,20 +340,42 @@ CREATE VIEW public.salesinfo AS
      JOIN public."Goods" goods ON ((goods."idGoods" = "Sales"."idGoods")));
 
 
-ALTER TABLE public.salesinfo OWNER TO postgres;
+--
+-- TOC entry 3379 (class 0 OID 17059)
+-- Dependencies: 213
+-- Data for Name: Client; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public."Client" ("idClient", "idUser", amount) FROM stdin;
+3	6	1000
+5	12	1000
+4	7	745
+6	13	100
+2	4	555
+7	14	445
+\.
 
 
 --
 -- TOC entry 3378 (class 0 OID 17052)
 -- Dependencies: 212
--- Data for Name: Employee; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: Employee; Type: TABLE DATA; Schema: public; Owner: -
 --
+
+COPY public."Employee" ("idEmployee", full_name, passport, "idPosition", "idUser") FROM stdin;
+2	Бородай А. М.	Серия: 2019, Номер: 345345, Код подразделения: 123-005	2	2
+3	Алексей В. В.	Серия: 2019, Номер: 33455, Код подразделения: 123-005	2	3
+4	Роман А. Д.	Серия: 2019, Номер: 545345, Код подразделения: 143-005	1	5
+6	Бульба А. Б.	Серия: 2010, Номер: 43455, Код подразделения: 123-005	4	9
+7	Иванов И. И.	Серия: 2009, Номер: 53455, Код подразделения: 123-005	5	10
+8	Строцкий К. К.	Серия: 2015, Номер: 35555, Код подразделения: 125-005	3	11
+\.
 
 
 --
 -- TOC entry 3375 (class 0 OID 17031)
 -- Dependencies: 209
--- Data for Name: Goods; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: Goods; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public."Goods" ("idGoods", "nameGoods", characteristics, note) FROM stdin;
@@ -396,46 +392,110 @@ COPY public."Goods" ("idGoods", "nameGoods", characteristics, note) FROM stdin;
 \.
 
 
+--
+-- TOC entry 3380 (class 0 OID 17064)
+-- Dependencies: 214
+-- Data for Name: Payments; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public."Payments" ("idPayments", "paymentDate", "orderCompletionMark", "paymentAmount") FROM stdin;
+2	2022-03-19 23:23:24+00	1	40
+3	2022-03-19 23:24:09+00	1	60
+4	2022-03-20 04:15:47+00	1	255
+5	2022-03-20 04:16:16+00	0	800
+6	2022-03-20 04:16:43+00	1	900
+7	2022-03-20 04:17:48+00	1	345
+8	2022-03-20 04:18:00+00	1	555
+\.
+
 
 --
 -- TOC entry 3376 (class 0 OID 17038)
 -- Dependencies: 210
--- Data for Name: Position; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: Position; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public."Position" ("idPosition", "namePosition", salary, note) FROM stdin;
-1	salesman	3600	\N
-2	administrator	4600	\N
-3	loader	2500	\N
-4	driver	3000	\N
-5	accountant	3000	\N
-6	agronomist	3000	\N
+1	Продавец	3600	\N
+2	Администратор	4600	\N
+3	Младший продавец	2500	\N
+4	Грузчик	3000	\N
+5	Управляющий	3000	\N
 \.
 
+
+--
+-- TOC entry 3381 (class 0 OID 17069)
+-- Dependencies: 215
+-- Data for Name: Sales; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public."Sales" ("idSaller", "idClient", "idPayments", "idGoods") FROM stdin;
+4	2	2	4
+4	2	2	7
+2	2	3	7
+2	4	4	1
+2	4	4	6
+2	4	4	8
+2	4	4	9
+2	4	5	2
+2	6	6	3
+2	6	6	7
+2	6	6	10
+2	6	6	8
+4	2	7	2
+4	2	7	6
+4	2	7	7
+4	7	8	1
+4	7	8	1
+4	7	8	1
+\.
+
+
+--
+-- TOC entry 3377 (class 0 OID 17045)
+-- Dependencies: 211
+-- Data for Name: User; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public."User" (id_user, login, password) FROM stdin;
+2	admin	password
+3	Alex	admin
+4	Alica	Alica
+5	Salesman01	pass
+6	Peter	Peter
+7	Pushkin	Pushkin
+9	Loader	Loader
+10	Manager	Manager
+11	Toaster	Toaster
+12	Krylov	Krylov
+13	Shurik	Shurik
+14	Yellow	Yellow
+\.
 
 
 --
 -- TOC entry 3393 (class 0 OID 0)
 -- Dependencies: 216
--- Name: Client_idClient_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: Client_idClient_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public."Client_idClient_seq"', 0, true);
+SELECT pg_catalog.setval('public."Client_idClient_seq"', 7, true);
 
 
 --
 -- TOC entry 3394 (class 0 OID 0)
 -- Dependencies: 219
--- Name: Employee_idEmployee_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: Employee_idEmployee_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public."Employee_idEmployee_seq"', 0, true);
+SELECT pg_catalog.setval('public."Employee_idEmployee_seq"', 8, true);
 
 
 --
 -- TOC entry 3395 (class 0 OID 0)
 -- Dependencies: 218
--- Name: Goods_idGoods_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: Goods_idGoods_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public."Goods_idGoods_seq"', 10, true);
@@ -444,16 +504,16 @@ SELECT pg_catalog.setval('public."Goods_idGoods_seq"', 10, true);
 --
 -- TOC entry 3396 (class 0 OID 0)
 -- Dependencies: 221
--- Name: Payments_idPayments_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: Payments_idPayments_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public."Payments_idPayments_seq"', 0, true);
+SELECT pg_catalog.setval('public."Payments_idPayments_seq"', 8, true);
 
 
 --
 -- TOC entry 3397 (class 0 OID 0)
 -- Dependencies: 220
--- Name: Position_idPosition_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: Position_idPosition_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public."Position_idPosition_seq"', 6, true);
@@ -462,15 +522,15 @@ SELECT pg_catalog.setval('public."Position_idPosition_seq"', 6, true);
 --
 -- TOC entry 3398 (class 0 OID 0)
 -- Dependencies: 217
--- Name: User_idUser_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: User_idUser_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public."User_idUser_seq"', 0, true);
+SELECT pg_catalog.setval('public."User_idUser_seq"', 14, true);
 
 
 --
 -- TOC entry 3223 (class 2606 OID 17063)
--- Name: Client Client_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Client Client_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Client"
@@ -479,7 +539,7 @@ ALTER TABLE ONLY public."Client"
 
 --
 -- TOC entry 3221 (class 2606 OID 17058)
--- Name: Employee Employee_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Employee Employee_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Employee"
@@ -488,7 +548,7 @@ ALTER TABLE ONLY public."Employee"
 
 --
 -- TOC entry 3213 (class 2606 OID 17037)
--- Name: Goods Goods_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Goods Goods_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Goods"
@@ -497,7 +557,7 @@ ALTER TABLE ONLY public."Goods"
 
 --
 -- TOC entry 3225 (class 2606 OID 17068)
--- Name: Payments Payments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Payments Payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Payments"
@@ -506,7 +566,7 @@ ALTER TABLE ONLY public."Payments"
 
 --
 -- TOC entry 3215 (class 2606 OID 17044)
--- Name: Position Position_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Position Position_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Position"
@@ -515,7 +575,7 @@ ALTER TABLE ONLY public."Position"
 
 --
 -- TOC entry 3217 (class 2606 OID 17051)
--- Name: User User_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: User User_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."User"
@@ -524,7 +584,7 @@ ALTER TABLE ONLY public."User"
 
 --
 -- TOC entry 3219 (class 2606 OID 25402)
--- Name: User login; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: User login; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."User"
@@ -533,7 +593,7 @@ ALTER TABLE ONLY public."User"
 
 --
 -- TOC entry 3228 (class 2606 OID 17082)
--- Name: Client Client_idUser_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Client Client_idUser_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Client"
@@ -542,7 +602,7 @@ ALTER TABLE ONLY public."Client"
 
 --
 -- TOC entry 3227 (class 2606 OID 17077)
--- Name: Employee Employee_idPosition_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Employee Employee_idPosition_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Employee"
@@ -551,7 +611,7 @@ ALTER TABLE ONLY public."Employee"
 
 --
 -- TOC entry 3226 (class 2606 OID 17072)
--- Name: Employee Employee_idUser_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Employee Employee_idUser_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Employee"
@@ -560,7 +620,7 @@ ALTER TABLE ONLY public."Employee"
 
 --
 -- TOC entry 3229 (class 2606 OID 17087)
--- Name: Sales Sales_idClient_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Sales Sales_idClient_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Sales"
@@ -569,7 +629,7 @@ ALTER TABLE ONLY public."Sales"
 
 --
 -- TOC entry 3231 (class 2606 OID 17097)
--- Name: Sales Sales_idGoods_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Sales Sales_idGoods_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Sales"
@@ -578,7 +638,7 @@ ALTER TABLE ONLY public."Sales"
 
 --
 -- TOC entry 3230 (class 2606 OID 17092)
--- Name: Sales Sales_idPayments_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Sales Sales_idPayments_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Sales"
@@ -587,14 +647,14 @@ ALTER TABLE ONLY public."Sales"
 
 --
 -- TOC entry 3232 (class 2606 OID 17102)
--- Name: Sales Sales_idSaller_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Sales Sales_idSaller_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Sales"
     ADD CONSTRAINT "Sales_idSaller_fkey" FOREIGN KEY ("idSaller") REFERENCES public."Employee"("idEmployee") NOT VALID;
 
 
--- Completed on 2022-03-19 21:29:17
+-- Completed on 2022-03-20 19:19:10
 
 --
 -- PostgreSQL database dump complete

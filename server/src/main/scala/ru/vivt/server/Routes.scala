@@ -8,6 +8,8 @@ import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.`Cache-Control`
 import org.http4s.{HttpRoutes, _}
+import ru.vivt
+import ru.vivt.server
 import ru.vivt.server.models.DataBaseUtil._
 import ru.vivt.server.models.{Procedure, Tables, View}
 import slick.jdbc.PostgresProfile.api._
@@ -54,7 +56,7 @@ trait Routes {
   def loadStatic(req: Request[IO], path: String, level: Array[Long]) = {
     for {
       cookies <- IO(req.cookies.filter(_.name == "authcookie").map(_.content).mkString("&"))
-      authorizationTry <- checkPrivileges(toKeyValue(cookies), level)
+      authorizationTry <- checkPrivileges(ru.vivt.commons.Entities.toKeyValue(cookies), level)
       resp <- authorizationTry match {
         case Right(_) =>
           static(s"html/static/$path.html", req)
@@ -93,7 +95,7 @@ trait Routes {
       case req@POST -> Root / "registration" / "employee" =>
         for {
           user <- req.as[String]
-          keyValue <-IO (toKeyValue(user))
+          keyValue <-IO (ru.vivt.commons.Entities.toKeyValue(user))
           _ <- IO.println("employee: " + keyValue.mkString(","))
           result <- IO.fromFuture(IO(db.run(Procedure.registrationEmployee(
             keyValue("fullName"),
@@ -108,14 +110,14 @@ trait Routes {
       case req@POST -> Root / "registration" / "client" =>
         for {
           user <- req.as[String]
-          keyValue <-IO (toKeyValue(user))
+          keyValue <-IO (ru.vivt.commons.Entities.toKeyValue(user))
           result <- IO.fromFuture(IO(db.run(Procedure.registrationClient(keyValue("username"), keyValue("password")))))
           resp <- Ok(result)
         } yield resp
       case req@POST -> Root / "login" =>
         for {
           user <- req.as[String]
-          keyValue <-IO (toKeyValue(user))
+          keyValue <-IO (ru.vivt.commons.Entities.toKeyValue(user))
           authorizationTry <- checkPrivileges(keyValue, Array(-1))
           resp <- authorizationTry match {
             case Right(userCookie) =>
@@ -142,11 +144,35 @@ trait Routes {
           position <- IO.fromFuture(IO(db.run(Tables.Position.result)))
           resp <- Ok(position)
         } yield resp
+      case req@GET -> Root / "api" / "infoaccount" =>
+        for {
+          cookies <- IO(ru.vivt.commons.Entities.toKeyValue(req.cookies.filter(_.name == "authcookie").map(_.content).mkString("&")))
+          infoAccount <- IO{
+            import models.Tables._
+            import io.circe.syntax._
+            val user = getUser(cookies("username"), cookies("password")).get
+            val client = runQ(Client.filter(_.iduser === user.idUser).result.headOption)
+            val employee = runQ((Employee join Position)
+              .on(_.idposition === _.idposition).filter(_._1.iduser === user.idUser)
+              .result.headOption)
+            if (client.isDefined) {
+              client.get.asJson
+            } else {
+              val employeeGet = employee.get
+              Map("fullName" -> employeeGet._1.fullName,
+                "nameposition" -> employeeGet._2.nameposition.toString,
+                "salary" -> employeeGet._2.salary.get.toString,
+                "note" -> employeeGet._2.note.getOrElse("null"),
+                "passport" -> employeeGet._1.passport.get.toString).asJson
+            }
+          }
+          resp <- Ok(infoAccount)
+        } yield resp
       case req@POST -> Root / "api" / "sellGoods" =>
         for {
           cookie <- IO(req.cookies.filter(_.name == "authcookie").map(_.content).mkString("&"))
           body <- req.as[String]
-          keyValue <- IO(toKeyValue(cookie + "&" + body))
+          keyValue <- IO(ru.vivt.commons.Entities.toKeyValue(cookie + "&" + body))
           _ <- IO.println("sellGoods: " + keyValue)
           _ <- IO.fromFuture(IO(db.run(Procedure.sellGoods(
             getClientOnLogin(keyValue("client")).idclient.toInt,

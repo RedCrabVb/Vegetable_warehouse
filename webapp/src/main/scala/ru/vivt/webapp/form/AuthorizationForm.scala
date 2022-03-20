@@ -1,7 +1,7 @@
 package ru.vivt.webapp.form
 
-import org.scalajs.dom.ext.Ajax
-import org.scalajs.dom.{document, window}
+import io.circe.Json
+import org.scalajs.dom.ext.{Ajax, pimpRichAnimatedNumber}
 import ru.vivt.commons.{ClientInfo, Goods, Position}
 import ru.vivt.webapp.form.GoodsForm.addFormError
 import ru.vivt.webapp.form.SellGoodsForm.addForm
@@ -9,12 +9,12 @@ import ru.vivt.webapp.utils.ItemHtml
 import io.circe.generic.auto._
 import io.circe.jawn.decode
 import org.scalajs.dom.ext.Ajax
-import org.scalajs.dom.{document, html}
+import org.scalajs.dom.{document, html, window}
+import ru.vivt.commons.Entities.toKeyValue
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.util.{Failure, Success}
-
 
 
 object AuthorizationForm extends ItemHtml {
@@ -57,6 +57,44 @@ object AuthorizationForm extends ItemHtml {
           window.location.replace("/login")
         case Failure(_) =>
           addFormError(containerAlert, "Ошибка при регестрации")
+      }
+  }
+
+  @JSExportTopLevel("infoAccount")
+  def infoAccount(container: String) = {
+    Ajax.get("/api/infoaccount")
+      .onComplete {
+        case Success(xhr) =>
+          println(xhr.responseText)
+
+          def getCookie() : Map[String,String] = {
+
+            Option(document.cookie).getOrElse("")
+              .split("; ")
+              .filter(t=>t.length > 0)
+              .map(t=> (t, t.split("=")))
+              .map(t=> (t._2(0), if (t._2.length > 1) t._1.substring(t._1.indexOf("=")+1) else null))
+              .toMap
+          }
+
+          val login = toKeyValue(getCookie()("authcookie"))("username")
+          println(login)
+
+          val jsonXhr = decode[Json](xhr.responseText).right.get.asObject.get.toMap
+          document.getElementById(container).innerHTML = if (jsonXhr.contains("passport")) {
+              s"""
+                 |<p>Логин: ${login}</p>
+                 |<p>ФИО: ${jsonXhr("fullName").asString.orNull}</p>
+                 |<p>Паспорт: ${jsonXhr("passport").asString.orNull}</p>
+                 |<p>Должность: ${jsonXhr("nameposition").asString.get}</p>
+                 |<p>Оклад: ${jsonXhr("salary").asString.get}</p>
+                 |<p>Заметка: ${jsonXhr("note").asString.orNull}</p>""".stripMargin
+          } else {
+            s"""
+               |<p>Логин: ${login}
+               |<p>Сумма средств: ${jsonXhr("amount").asNumber.get}</p>
+               |""".stripMargin
+          }
       }
   }
 
