@@ -51,6 +51,19 @@ trait Routes {
       .getOrElseF(NotFound())
   }
 
+  def loadStatic(req: Request[IO], path: String, level: Array[Long]) = {
+    for {
+      cookies <- IO(req.cookies.filter(_.name == "authcookie").map(_.content).mkString("&"))
+      authorizationTry <- checkPrivileges(toKeyValue(cookies), level)
+      resp <- authorizationTry match {
+        case Right(_) =>
+          static(s"html/static/$path.html", req)
+        case Left(_) =>
+          static(s"html/static/login.html", req)
+      }
+    } yield resp
+  }
+
 
   def webRoutes: HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
@@ -59,27 +72,11 @@ trait Routes {
       case req@GET -> Root / "style" / path =>
         static(s"html/static/$path", req)
       case req@GET -> Root / "app" / path if (List("goods", "main").contains(path)) =>
-        for {
-          cookies <- IO(req.cookies.filter(_.name == "authcookie").map(_.content).mkString("&"))
-          authorizationTry <- checkPrivileges(toKeyValue(cookies), 1)
-          resp <- authorizationTry match {
-            case Right(userCookie) =>
-              static(s"html/static/$path.html", req)
-            case Left(_) =>
-              static(s"html/static/login.html", req)
-          }
-        } yield resp
-      case req@GET -> Root / "app" / path if (List("clientInfo", "sellGoods", "historySales", "employeeInfo").contains(path)) =>
-        for {
-          cookies <- IO(req.cookies.filter(_.name == "authcookie").map(_.content).mkString("&"))
-          authorizationTry <- checkPrivileges(toKeyValue(cookies), 2)
-          resp <- authorizationTry match {
-            case Right(userCookie) =>
-              static(s"html/static/$path.html", req)
-            case Left(_) =>
-              static(s"html/static/login.html", req)
-          }
-        } yield resp
+        loadStatic(req, path, Array(0, 1, 2))
+      case req@GET -> Root / "app" / path if (List("sellGoods", "historySales").contains(path)) =>
+        loadStatic(req, path, Array(1, 2))
+      case req@GET -> Root / "app" / path if (List("clientInfo", "employeeInfo").contains(path)) =>
+        loadStatic(req, path, Array(2))
       case req@GET -> Root / "login" =>
         static(s"html/static/login.html", req)
       case req@GET -> Root / "logout" =>
@@ -97,7 +94,7 @@ trait Routes {
         for {
           user <- req.as[String]
           keyValue <-IO (toKeyValue(user))
-          _ <- IO.println(keyValue)
+          _ <- IO.println("employee: " + keyValue.mkString(","))
           result <- IO.fromFuture(IO(db.run(Procedure.registrationEmployee(
             keyValue("fullName"),
             keyValue("passport"),
@@ -119,7 +116,7 @@ trait Routes {
         for {
           user <- req.as[String]
           keyValue <-IO (toKeyValue(user))
-          authorizationTry <- checkPrivileges(keyValue, 1)
+          authorizationTry <- checkPrivileges(keyValue, Array(-1))
           resp <- authorizationTry match {
             case Right(userCookie) =>
                 Ok()
@@ -150,7 +147,7 @@ trait Routes {
           cookie <- IO(req.cookies.filter(_.name == "authcookie").map(_.content).mkString("&"))
           body <- req.as[String]
           keyValue <- IO(toKeyValue(cookie + "&" + body))
-          _ <- IO.println(keyValue)
+          _ <- IO.println("sellGoods: " + keyValue)
           _ <- IO.fromFuture(IO(db.run(Procedure.sellGoods(
             getClientOnLogin(keyValue("client")).idclient.toInt,
             getEmployee(getUser(keyValue("username"), keyValue("password")).get).idemployee.toInt,

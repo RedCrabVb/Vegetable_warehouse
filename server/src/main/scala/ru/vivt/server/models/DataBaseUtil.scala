@@ -33,8 +33,8 @@ object DataBaseUtil {
 
   def getPosition(user: models.Tables.UserRow): Option[models.Tables.PositionRow] = {
     import models.Tables._
-    val q = (Employee joinLeft Position on (_.idposition === _.idposition) filter (_._1.iduser === user.idUser)).result.headOption
-    runQ(q).orNull._2
+    val q = (Employee join Position on (_.idposition === _.idposition) filter (_._1.iduser === user.idUser)).map(_._2).result.headOption
+    runQ(q)
   }
 
   def getClientOnLogin(login: String) = {
@@ -51,13 +51,15 @@ object DataBaseUtil {
    runQ(q).orNull
   }
 
-  def checkPrivileges(keyValue: Map[String, String], level: Int): IO[Either[String, String]] = {
+  def checkPrivileges(keyValue: Map[String, String], level: Array[Long]): IO[Either[String, String]] = {
+    println("checkPrivileges: " + keyValue)
     lazy val user = getUser(keyValue("username"), keyValue("password"))
+    lazy val position = getPosition(user.get)
+
     lazy val checkUser = (keyValue.contains("username") && keyValue.contains("password")
-    && user.isDefined && (level == 1 || getPosition(user.get).get.idposition == level))
+    && user.isDefined && (level.contains(0) || position.isDefined && level.contains(position.get.idposition)))
 
-
-    IO {Either.cond(level == 0 || checkUser,
+    IO {Either.cond(level.contains(-1) || checkUser,
       s"username=${keyValue("username")}&password=${keyValue("password")}",
       "no access rights")}
   }

@@ -24,7 +24,7 @@ trait ItemHtml {
   def getInputSelection(container: String): Option[String] = {
     val containerTag = document.getElementById(container).asInstanceOf[html.Select]
     Option(try {
-      val index: Int = containerTag.value.toInt
+      val index: Int = containerTag.value.toInt + 1
       containerTag.options.apply(index).text
     } catch {
       case e: NumberFormatException => null
