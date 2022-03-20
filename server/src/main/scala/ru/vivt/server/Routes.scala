@@ -48,7 +48,7 @@ trait Routes {
   }
 
   def static(file: String, request: Request[IO]) = {
-    StaticFile.fromFile(new File("./server/src/main/resources/" + file), Some(request))
+    StaticFile.fromResource(file, Some(request))
       .map(_.addHeader(`Cache-Control`(NonEmptyList(`no-cache`(), Nil))))
       .getOrElseF(NotFound())
   }

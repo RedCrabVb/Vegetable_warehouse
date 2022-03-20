@@ -6,8 +6,7 @@ import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.implicits._
 
 object Main extends IOApp with Routes {
-  val serverPort = 8080
-  println(s"Server start, for test: http://localhost:$serverPort/hello")
+
   val app = (
     viewRoutes <+>
       webRoutes <+>
@@ -15,16 +14,20 @@ object Main extends IOApp with Routes {
       apiRoots
     ).orNotFound
 
-  val server = BlazeServerBuilder[IO]
-    .bindHttp(serverPort)
-    .withHttpApp(app)
+  def run(args: List[String]): IO[ExitCode] = {
+    val serverPort = args(0).toInt
+    println(s"Server start, for test: http://localhost:$serverPort/hello")
 
-  val serverResource = server.resource
+    val server = BlazeServerBuilder[IO]
+      .bindHttp(serverPort)
+      .withHttpApp(app)
 
-  def run(args: List[String]): IO[ExitCode] =
+    val serverResource = server.resource
+
     server
       .serve
       .compile.drain
       .as(ExitCode.Success)
+  }
 
 }
