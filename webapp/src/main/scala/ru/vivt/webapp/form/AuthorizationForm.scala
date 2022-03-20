@@ -2,8 +2,14 @@ package ru.vivt.webapp.form
 
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.{document, window}
+import ru.vivt.commons.{ClientInfo, Goods, Position}
 import ru.vivt.webapp.form.GoodsForm.addFormError
+import ru.vivt.webapp.form.SellGoodsForm.addForm
 import ru.vivt.webapp.utils.ItemHtml
+import io.circe.generic.auto._
+import io.circe.jawn.decode
+import org.scalajs.dom.ext.Ajax
+import org.scalajs.dom.{document, html}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.annotation.JSExportTopLevel
@@ -27,6 +33,7 @@ object AuthorizationForm extends ItemHtml {
   @JSExportTopLevel("addFormEmployee")
   def addFormEmployee(container: String, login: String, password: String, containerAlert: String) = {
     addForm(container, getBodyEmployee(_, login, password, containerAlert))
+    addPositionList("position-input")
   }
 
   @JSExportTopLevel("authorization")
@@ -79,6 +86,19 @@ object AuthorizationForm extends ItemHtml {
     }
   }
 
+  def addPositionList(container: String): Unit = {
+    Ajax.post("/api/position", "")
+      .onComplete {
+        case Success(xhr) =>
+          decode[Array[Position]](xhr.responseText) match {
+            case Right(positions) =>
+              val positionsList = "<option selected>Выбор должности</option>\n" + positions.zipWithIndex.map(g => (g._1.nameposition, g._2)).map(x => s"<option value='${x._2}'>${x._1}</option>").mkString("\n")
+              addForm(container, positionsList)
+          }
+        case Failure(exception) => println("addGoodsList error: " + exception)
+      }
+  }
+
 
   def getBodyEmployee(container: String, login: String, password: String, containerAlert: String): String = {
     s"""
@@ -94,8 +114,6 @@ object AuthorizationForm extends ItemHtml {
        |        </div>
        |        <select class="form-select mb-3" id="position-input" aria-label="Должность">
        |            <option selected>Выбор должности</option>
-       |            <option value="1">salesman</option>
-       |            <option value="2">administrator</option>
        |        </select>
        |        <button class="btn btn-primary" onClick="registrationEmployee(
        |          '${getInput(login)}',

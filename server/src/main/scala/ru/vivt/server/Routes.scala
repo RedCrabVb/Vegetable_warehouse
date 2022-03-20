@@ -137,6 +137,11 @@ trait Routes {
           goods <- IO.fromFuture(IO(db.run(Tables.Goods.result)))
           resp <- Ok(goods)
         } yield resp
+      case POST -> Root / "api" / "position" =>
+        for {
+          position <- IO.fromFuture(IO(db.run(Tables.Position.result)))
+          resp <- Ok(position)
+        } yield resp
     }
   }
 }

@@ -2,17 +2,13 @@ package ru.vivt.webapp.form
 
 import io.circe.generic.auto._
 import io.circe.jawn.decode
-import org.scalajs.dom.{document, html}
 import org.scalajs.dom.ext.Ajax
+import org.scalajs.dom.{document, html}
 import ru.vivt.commons.{ClientInfo, Goods}
-import ru.vivt.webapp.form.ClientInfoForm.{addFormError, simpleTable}
-import ru.vivt.webapp.form.GoodsForm.{addFormError, simpleTable}
-import ru.vivt.webapp.form.HistorySales.addFormError
-import ru.vivt.webapp.utils.{AlertMessage, ItemHtml, Table}
-import scalatags.JsDom.all.li
+import ru.vivt.webapp.utils.{AlertMessage, ItemHtml}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.util.{Failure, Success}
 
 object SellGoodsForm extends ItemHtml with AlertMessage {
