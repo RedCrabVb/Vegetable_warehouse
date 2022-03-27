@@ -1,0 +1,906 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 14.2 (Debian 14.2-1.pgdg110+1)
+-- Dumped by pg_dump version 14.1
+
+-- Started on 2022-03-27 21:45:52
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 245 (class 1255 OID 33942)
+-- Name: make_operation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.make_operation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$begin
+ raise notice 'make operation: %, %', NEW.id_storage, NEW.id_goods;
+ with quantity_of_goods_w as (
+    select quantity_of_goods from warehouse where id_goods = NEW.id_goods and id_storage = NEW.id_storage
+ )
+ update warehouse set quantity_of_goods = (case 
+   when NEW.type_operation = 1 then (select * from "quantity_of_goods_w") - NEW.quantity_of_goods 
+   when NEW.type_operation = 0 then (select * from "quantity_of_goods_w") + NEW.quantity_of_goods 
+   else 0
+   end)
+ where id_goods = NEW.id_goods and id_storage = NEW.id_storage; 
+ return NEW;
+end$$;
+
+
+--
+-- TOC entry 232 (class 1255 OID 33774)
+-- Name: registration_client(character varying, character varying); Type: PROCEDURE; Schema: public; Owner: -
+--
+
+CREATE PROCEDURE public.registration_client(IN login_in character varying, IN password_in character varying)
+    LANGUAGE plpgsql
+    AS $$declare
+begin
+  with user_id_req as (
+      insert into "user" ("login", "password") values (login_in, password_in) returning id_user
+  ) insert into client ("idUser", amount) values (
+      (select id_user from user_id_req),
+      1000
+  );
+end;
+$$;
+
+
+--
+-- TOC entry 233 (class 1255 OID 33775)
+-- Name: registration_employee(character varying, character varying, character varying, character varying, character varying); Type: PROCEDURE; Schema: public; Owner: -
+--
+
+CREATE PROCEDURE public.registration_employee(IN full_name_in character varying, IN passport_in character varying, IN position_in character varying, IN login_in character varying, IN "password_In" character varying)
+    LANGUAGE plpgsql
+    AS $$declare
+begin
+  with user_id_req as (
+      insert into "user" ("login", "password") values (login_in, "password_In") returning "id_user"
+  ) insert into employee ("id_user", full_name, passport, "id_position") values (
+      (select "id_user" from "user_id_req"),
+      full_name_in,
+      passport_in,
+      (select "id_position" from "position" where "name_position" = position_in)
+  );
+end;
+$$;
+
+
+--
+-- TOC entry 247 (class 1255 OID 33960)
+-- Name: sell_goods(bigint, bigint, bigint, timestamp with time zone, bigint, bigint, bigint[]); Type: PROCEDURE; Schema: public; Owner: -
+--
+
+CREATE PROCEDURE public.sell_goods(IN id_clinet_in bigint, IN id_seller_in bigint, IN sum_in bigint, IN date_pay timestamp with time zone, IN id_storage_in bigint, IN quantity_of_goods_in bigint, IN id_goods_in bigint[])
+    LANGUAGE plpgsql
+    AS $$
+declare
+    idPaymentsVAR integer := 0;
+    idOperationsVar bigint := 0;
+    amountVAR bigint := 0;
+begin
+ select amount  into amountVAR from client where id_client = id_clinet_IN;
+ update client set amount = (CASE
+                                    WHEN amountVAR > sum_IN THEN amountVAR - sum_IN
+                                    WHEN amountVAR <= sum_IN THEN amountVAR
+                                    END) where id_client = id_clinet_IN;
+
+ with id_payments_IN as (
+ 	insert into public."payments" (payment_date, order_completion_mark, payment_amount) values (date_pay, (CASE
+                                    WHEN amountVAR > sum_IN THEN 1
+                                    WHEN amountVAR <= sum_IN THEN 0
+                                    END), sum_IN) returning *
+ )
+ (select id_Payments into idPaymentsVAR from id_payments_IN);
+
+ for i in 1 .. array_upper(id_goods_IN, 1) loop
+	raise notice 'id_goods_IN: %', id_goods_IN[i];
+    with id_operation_IN as (
+      insert into operations_history(id_storage, id_goods, id_employee, quantity_of_goods, type_operation) values (id_storage_in, id_goods_IN[i], id_seller_IN, quantity_of_goods_in, 1) returning *
+    ) 
+    (select id_operation into idOperationsVar from id_operation_IN);
+    insert into sales (id_saller, id_client, id_payments, id_operations) values (id_seller_IN, id_clinet_IN, idPaymentsVAR, idOperationsVar);
+ end loop;
+
+end; 
+$$;
+
+
+--
+-- TOC entry 246 (class 1255 OID 33959)
+-- Name: sell_goods(bigint, bigint, bigint, timestamp with time zone, bigint, bigint, bigint); Type: PROCEDURE; Schema: public; Owner: -
+--
+
+CREATE PROCEDURE public.sell_goods(IN id_client_in bigint, IN id_saller_in bigint, IN sum_in bigint, IN date_pay timestamp with time zone, IN id_storage_in bigint, IN quantity_of_goods_in bigint, IN id_goods_in bigint)
+    LANGUAGE plpgsql
+    AS $$
+declare
+-- variable declaration
+begin
+    call sell_goods(id_client_IN, id_saller_IN, sum_IN, date_pay, id_storage_in, quantity_of_goods_in, array[id_goods_IN]);
+end; 
+$$;
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 209 (class 1259 OID 33778)
+-- Name: client; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client (
+    id_client bigint NOT NULL,
+    id_user bigint NOT NULL,
+    amount bigint
+);
+
+
+--
+-- TOC entry 210 (class 1259 OID 33781)
+-- Name: client_id_client_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.client ALTER COLUMN id_client ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.client_id_client_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 211 (class 1259 OID 33782)
+-- Name: user; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public."user" (
+    id_user bigint NOT NULL,
+    login character varying(255) NOT NULL,
+    password character varying(255) NOT NULL
+);
+
+
+--
+-- TOC entry 212 (class 1259 OID 33787)
+-- Name: client_info; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.client_info AS
+ SELECT client.id_client,
+    usr.login,
+    client.amount
+   FROM (public.client
+     JOIN public."user" usr ON ((usr.id_user = client.id_user)));
+
+
+--
+-- TOC entry 213 (class 1259 OID 33791)
+-- Name: employee; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.employee (
+    id_employee bigint NOT NULL,
+    full_name character varying(255) NOT NULL,
+    passport text,
+    id_position bigint NOT NULL,
+    id_user bigint NOT NULL
+);
+
+
+--
+-- TOC entry 214 (class 1259 OID 33796)
+-- Name: employee_id_employee_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.employee ALTER COLUMN id_employee ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.employee_id_employee_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 215 (class 1259 OID 33797)
+-- Name: position; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public."position" (
+    id_position bigint NOT NULL,
+    name_position character varying(255) NOT NULL,
+    salary bigint,
+    note text,
+    CONSTRAINT person_constraint CHECK ((salary > 0))
+);
+
+
+--
+-- TOC entry 216 (class 1259 OID 33802)
+-- Name: employee_info; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.employee_info AS
+ SELECT employee.id_employee,
+    employee.full_name,
+    usr.login,
+    employee.passport,
+    pos.name_position,
+    pos.salary
+   FROM ((public.employee
+     JOIN public."position" pos ON ((pos.id_position = employee.id_position)))
+     JOIN public."user" usr ON ((usr.id_user = employee.id_user)));
+
+
+--
+-- TOC entry 217 (class 1259 OID 33806)
+-- Name: goods; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.goods (
+    id_goods bigint NOT NULL,
+    name_goods character varying(255) NOT NULL,
+    characteristics text NOT NULL,
+    note text
+);
+
+
+--
+-- TOC entry 218 (class 1259 OID 33811)
+-- Name: goods_id_goods_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.goods ALTER COLUMN id_goods ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.goods_id_goods_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 219 (class 1259 OID 33812)
+-- Name: operations_history; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.operations_history (
+    id_operation bigint NOT NULL,
+    id_storage bigint NOT NULL,
+    id_goods bigint NOT NULL,
+    id_employee bigint NOT NULL,
+    quantity_of_goods bigint NOT NULL,
+    type_operation smallint NOT NULL
+);
+
+
+--
+-- TOC entry 225 (class 1259 OID 33828)
+-- Name: storage; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.storage (
+    id_storage bigint NOT NULL,
+    title character varying,
+    address text
+);
+
+
+--
+-- TOC entry 231 (class 1259 OID 33952)
+-- Name: operation_info; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.operation_info AS
+ SELECT operations_history.id_operation,
+    stor.title AS title_sotre,
+    g.name_goods,
+    em.full_name,
+    operations_history.quantity_of_goods,
+        CASE operations_history.type_operation
+            WHEN 0 THEN 'Загрузка'::text
+            WHEN 1 THEN 'Отгрузка'::text
+            ELSE NULL::text
+        END AS "case"
+   FROM (((public.operations_history
+     JOIN public.goods g ON ((g.id_goods = operations_history.id_goods)))
+     JOIN public.employee em ON ((em.id_employee = operations_history.id_employee)))
+     JOIN public.storage stor ON ((stor.id_storage = operations_history.id_storage)));
+
+
+--
+-- TOC entry 229 (class 1259 OID 33921)
+-- Name: operations_history_id_operation_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.operations_history ALTER COLUMN id_operation ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.operations_history_id_operation_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 220 (class 1259 OID 33815)
+-- Name: payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.payments (
+    id_payments bigint NOT NULL,
+    payment_date timestamp with time zone,
+    order_completion_mark smallint,
+    payment_amount bigint
+);
+
+
+--
+-- TOC entry 221 (class 1259 OID 33818)
+-- Name: payments_id_payments_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.payments ALTER COLUMN id_payments ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.payments_id_payments_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 222 (class 1259 OID 33819)
+-- Name: position_id_position_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public."position" ALTER COLUMN id_position ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.position_id_position_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 223 (class 1259 OID 33820)
+-- Name: sales; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sales (
+    id_saller bigint NOT NULL,
+    id_client bigint NOT NULL,
+    id_payments bigint NOT NULL,
+    id_operations bigint NOT NULL
+);
+
+
+--
+-- TOC entry 224 (class 1259 OID 33823)
+-- Name: sales_info; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.sales_info AS
+ SELECT employee.full_name AS name_sales,
+    clinet.login AS login_user,
+    payments.payment_date,
+    payments.order_completion_mark,
+    payments.payment_amount AS amount,
+    goods.name_goods AS goods_name
+   FROM (((((public.sales
+     JOIN public.employee employee ON ((employee.id_employee = sales.id_saller)))
+     JOIN public.client_info clinet ON ((clinet.id_client = sales.id_client)))
+     JOIN public.payments payments ON ((payments.id_payments = sales.id_payments)))
+     JOIN public.operations_history op ON ((op.id_operation = sales.id_operations)))
+     JOIN public.goods goods ON ((goods.id_goods = op.id_goods)));
+
+
+--
+-- TOC entry 228 (class 1259 OID 33914)
+-- Name: storage_id_storage_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.storage ALTER COLUMN id_storage ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.storage_id_storage_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 226 (class 1259 OID 33833)
+-- Name: user_id_user_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public."user" ALTER COLUMN id_user ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.user_id_user_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 227 (class 1259 OID 33834)
+-- Name: warehouse; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.warehouse (
+    id_goods bigint NOT NULL,
+    id_storage bigint NOT NULL,
+    quantity_of_goods bigint
+);
+
+
+--
+-- TOC entry 230 (class 1259 OID 33948)
+-- Name: warehouse_goods; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.warehouse_goods AS
+ SELECT g.id_goods,
+    stor.id_storage,
+    g.name_goods,
+    stor.title,
+    warehouse.quantity_of_goods
+   FROM ((public.warehouse
+     JOIN public.storage stor ON ((stor.id_storage = warehouse.id_storage)))
+     JOIN public.goods g ON ((g.id_goods = warehouse.id_goods)));
+
+
+--
+-- TOC entry 3411 (class 0 OID 33778)
+-- Dependencies: 209
+-- Data for Name: client; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.client OVERRIDING SYSTEM VALUE VALUES (4, 7, 745);
+INSERT INTO public.client OVERRIDING SYSTEM VALUE VALUES (6, 13, 100);
+INSERT INTO public.client OVERRIDING SYSTEM VALUE VALUES (7, 14, 445);
+INSERT INTO public.client OVERRIDING SYSTEM VALUE VALUES (5, 12, 955);
+INSERT INTO public.client OVERRIDING SYSTEM VALUE VALUES (2, 4, 455);
+INSERT INTO public.client OVERRIDING SYSTEM VALUE VALUES (3, 6, 746);
+
+
+--
+-- TOC entry 3414 (class 0 OID 33791)
+-- Dependencies: 213
+-- Data for Name: employee; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.employee OVERRIDING SYSTEM VALUE VALUES (2, 'Бородай А. М.', 'Серия: 2019, Номер: 345345, Код подразделения: 123-005', 2, 2);
+INSERT INTO public.employee OVERRIDING SYSTEM VALUE VALUES (3, 'Алексей В. В.', 'Серия: 2019, Номер: 33455, Код подразделения: 123-005', 2, 3);
+INSERT INTO public.employee OVERRIDING SYSTEM VALUE VALUES (4, 'Роман А. Д.', 'Серия: 2019, Номер: 545345, Код подразделения: 143-005', 1, 5);
+INSERT INTO public.employee OVERRIDING SYSTEM VALUE VALUES (6, 'Бульба А. Б.', 'Серия: 2010, Номер: 43455, Код подразделения: 123-005', 4, 9);
+INSERT INTO public.employee OVERRIDING SYSTEM VALUE VALUES (7, 'Иванов И. И.', 'Серия: 2009, Номер: 53455, Код подразделения: 123-005', 5, 10);
+INSERT INTO public.employee OVERRIDING SYSTEM VALUE VALUES (8, 'Строцкий К. К.', 'Серия: 2015, Номер: 35555, Код подразделения: 125-005', 3, 11);
+
+
+--
+-- TOC entry 3417 (class 0 OID 33806)
+-- Dependencies: 217
+-- Data for Name: goods; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.goods OVERRIDING SYSTEM VALUE VALUES (1, 'пшеница', 'Если купить яровые пшеничные семена, то их посев необходимо выполнить весной. Этот вид злака чувствителен к сорнякам, но способен выдерживать кратковременные заморозки и засуху. Причем мягкие сорта более устойчивы к холоду, чем твердые. Культура может выращиваться почти во всех агроклиматических зонах России, поскольку легко адаптируется к окружающим условиям', NULL);
+INSERT INTO public.goods OVERRIDING SYSTEM VALUE VALUES (2, 'кукуруза', 'Зубовидная с крупными зернами. Широко распространена в России, используется для производства муки, круп, спирта, крахмала, силоса. Злак содержит до 75 % крахмала, до 10 % белка и до 5 % растительного жира.', NULL);
+INSERT INTO public.goods OVERRIDING SYSTEM VALUE VALUES (3, 'подсолнух', 'Листья — крупные, мясистые, на длинных черешках, с пушком по поверхности. У масличных сортов вырастает до 30 листьев. Соцветие — круглая корзинка с ярко-желтыми лепестками, диаметр от 10 до 40 и более см. Плод — продолговатая семянка с четырьмя гранями, снаружи кожура, внутри семя.', NULL);
+INSERT INTO public.goods OVERRIDING SYSTEM VALUE VALUES (4, 'картошка', 'Многолетнее травянистое клубненосное растение, возделываемое как однолетняя культура. Представляет собой куст высотой до 1 м, с 4-6, иногда 6-8 стеблями, количество которых зависит от сорта и величины посадочного клубня.', NULL);
+INSERT INTO public.goods OVERRIDING SYSTEM VALUE VALUES (5, 'капуста', 'Капустный кочан представляет собой стебель-кочерыгу, на которой расположены плотно свитые листья, прикрывающие боковые и верхушечную ростовые почки. Кочаны белокочанной капусты могут быть круглыми, округло-плоскими, конусовидными. Кочерыга может входить в кочан на глубину от 1/3 до 2/3 его толщины.', NULL);
+INSERT INTO public.goods OVERRIDING SYSTEM VALUE VALUES (6, 'морковь', 'Морковь – двухлетнее (редко однолетнее или многолетнее) растение, относящееся к царству растения, отделу цветковые, классу двудольные, порядку зонтикоцветные, семейству зонтичные, роду морковь (Daucus).', NULL);
+INSERT INTO public.goods OVERRIDING SYSTEM VALUE VALUES (10, 'огурец', 'Огурец отличается системой корневания стержневого типа, при этом корень способен проникать на глубину от 0,8 до 1,2 м. Основная часть корневища разветвлена в верхнем, наиболее плодородном, слое грунта от 0,1 до 0,4 м, благодаря чему растение может хорошо прогреваться на всех уровнях и впитывать питательные вещества.', 'Рекомендуется выращивать в пленочных теплицах или на открытом грунте в теплых регионах.');
+INSERT INTO public.goods OVERRIDING SYSTEM VALUE VALUES (7, 'помидор', 'Стебель помидоров состоит из части стеблей боковых побегов; травянистый, сочный, во влажной почве легко образует дополнительные корни. По мере роста они грубеют. Имеет округлую форму, с возрастом изменяется в результате образования на нем желобов и становится ребристым.', 'Рекомендуется выращивать в пленочных теплицах или на открытом грунте в теплых регионах.');
+INSERT INTO public.goods OVERRIDING SYSTEM VALUE VALUES (8, 'семена картошки', 'Ранний сорт немецкой селекции с желтой мякотью. Урожайный, относительно неприхотливый, устойчивый к картофельным болезням. Универсального кулинарного типа,  средней развариваемости.', 'Рекомендуется выращивать в пленочных теплицах или на открытом грунте в теплых регионах.');
+INSERT INTO public.goods OVERRIDING SYSTEM VALUE VALUES (9, 'семена помидора', 'Сорт среднего созревания, любимец среди садоводов. Культура, даже при плохих условиях, дает прекрасный урожай. Растение достигает высоты 1,5-1,8 м. Спелые плоды имеют красный окрас, мясистые, сердцевидной формы. Их масса достигает до 500 г.', 'Рекомендуется выращивать в пленочных теплицах или на открытом грунте в теплых регионах.');
+
+
+--
+-- TOC entry 3419 (class 0 OID 33812)
+-- Dependencies: 219
+-- Data for Name: operations_history; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.operations_history OVERRIDING SYSTEM VALUE VALUES (24, 2, 8, 3, 10, 1);
+INSERT INTO public.operations_history OVERRIDING SYSTEM VALUE VALUES (25, 2, 8, 4, 15, 1);
+INSERT INTO public.operations_history OVERRIDING SYSTEM VALUE VALUES (26, 1, 2, 6, 150, 0);
+INSERT INTO public.operations_history OVERRIDING SYSTEM VALUE VALUES (27, 1, 2, 6, 30, 0);
+INSERT INTO public.operations_history OVERRIDING SYSTEM VALUE VALUES (28, 2, 8, 2, 15, 1);
+INSERT INTO public.operations_history OVERRIDING SYSTEM VALUE VALUES (29, 2, 1, 2, 10, 1);
+INSERT INTO public.operations_history OVERRIDING SYSTEM VALUE VALUES (30, 2, 9, 2, 10, 1);
+INSERT INTO public.operations_history OVERRIDING SYSTEM VALUE VALUES (31, 2, 4, 2, 10, 1);
+
+
+--
+-- TOC entry 3420 (class 0 OID 33815)
+-- Dependencies: 220
+-- Data for Name: payments; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.payments OVERRIDING SYSTEM VALUE VALUES (23, '2022-02-02 09:30:20+00', 1, 100);
+INSERT INTO public.payments OVERRIDING SYSTEM VALUE VALUES (24, '2022-02-02 09:30:20+00', 1, 154);
+INSERT INTO public.payments OVERRIDING SYSTEM VALUE VALUES (25, '2022-02-02 09:30:20+00', 1, 50);
+INSERT INTO public.payments OVERRIDING SYSTEM VALUE VALUES (26, '2022-02-02 09:30:20+00', 1, 50);
+
+
+--
+-- TOC entry 3416 (class 0 OID 33797)
+-- Dependencies: 215
+-- Data for Name: position; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public."position" OVERRIDING SYSTEM VALUE VALUES (2, 'Администратор', 4600, NULL);
+INSERT INTO public."position" OVERRIDING SYSTEM VALUE VALUES (3, 'Младший продавец', 2500, NULL);
+INSERT INTO public."position" OVERRIDING SYSTEM VALUE VALUES (4, 'Грузчик', 3000, NULL);
+INSERT INTO public."position" OVERRIDING SYSTEM VALUE VALUES (5, 'Управляющий', 3000, NULL);
+INSERT INTO public."position" OVERRIDING SYSTEM VALUE VALUES (1, 'Продавец', 3800, NULL);
+
+
+--
+-- TOC entry 3423 (class 0 OID 33820)
+-- Dependencies: 223
+-- Data for Name: sales; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.sales VALUES (3, 2, 23, 24);
+INSERT INTO public.sales VALUES (4, 3, 24, 25);
+INSERT INTO public.sales VALUES (2, 3, 25, 28);
+INSERT INTO public.sales VALUES (2, 3, 26, 29);
+INSERT INTO public.sales VALUES (2, 3, 26, 30);
+INSERT INTO public.sales VALUES (2, 3, 26, 31);
+
+
+--
+-- TOC entry 3424 (class 0 OID 33828)
+-- Dependencies: 225
+-- Data for Name: storage; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.storage OVERRIDING SYSTEM VALUE VALUES (1, 'ООО "Региональное Карьероуправление"', 'пр. Революции, 335, Воронеж, Воронежская обл., 394036');
+INSERT INTO public.storage OVERRIDING SYSTEM VALUE VALUES (2, 'Склад02', 'пр. Труда, 107В, Воронеж, Воронежская обл., 394026');
+INSERT INTO public.storage OVERRIDING SYSTEM VALUE VALUES (3, 'Склад ТСК ВИДАР', 'Воронеж, Воронежская обл., 394019');
+
+
+--
+-- TOC entry 3413 (class 0 OID 33782)
+-- Dependencies: 211
+-- Data for Name: user; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (2, 'admin', 'password');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (3, 'Alex', 'admin');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (4, 'Alica', 'Alica');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (5, 'Salesman01', 'pass');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (6, 'Peter', 'Peter');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (7, 'Pushkin', 'Pushkin');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (9, 'Loader', 'Loader');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (10, 'Manager', 'Manager');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (11, 'Toaster', 'Toaster');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (12, 'Krylov', 'Krylov');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (13, 'Shurik', 'Shurik');
+INSERT INTO public."user" OVERRIDING SYSTEM VALUE VALUES (14, 'Yellow', 'Yellow');
+
+
+--
+-- TOC entry 3426 (class 0 OID 33834)
+-- Dependencies: 227
+-- Data for Name: warehouse; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.warehouse VALUES (6, 1, 100);
+INSERT INTO public.warehouse VALUES (9, 1, 100);
+INSERT INTO public.warehouse VALUES (3, 2, 100);
+INSERT INTO public.warehouse VALUES (4, 1, 90);
+INSERT INTO public.warehouse VALUES (5, 3, 100);
+INSERT INTO public.warehouse VALUES (7, 2, 100);
+INSERT INTO public.warehouse VALUES (2, 3, 80);
+INSERT INTO public.warehouse VALUES (10, 1, 80);
+INSERT INTO public.warehouse VALUES (2, 1, 220);
+INSERT INTO public.warehouse VALUES (8, 2, 60);
+INSERT INTO public.warehouse VALUES (1, 2, -9);
+
+
+--
+-- TOC entry 3434 (class 0 OID 0)
+-- Dependencies: 210
+-- Name: client_id_client_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.client_id_client_seq', 1, false);
+
+
+--
+-- TOC entry 3435 (class 0 OID 0)
+-- Dependencies: 214
+-- Name: employee_id_employee_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.employee_id_employee_seq', 1, false);
+
+
+--
+-- TOC entry 3436 (class 0 OID 0)
+-- Dependencies: 218
+-- Name: goods_id_goods_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.goods_id_goods_seq', 1, false);
+
+
+--
+-- TOC entry 3437 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: operations_history_id_operation_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.operations_history_id_operation_seq', 31, true);
+
+
+--
+-- TOC entry 3438 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: payments_id_payments_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.payments_id_payments_seq', 26, true);
+
+
+--
+-- TOC entry 3439 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: position_id_position_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.position_id_position_seq', 1, false);
+
+
+--
+-- TOC entry 3440 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: storage_id_storage_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.storage_id_storage_seq', 3, true);
+
+
+--
+-- TOC entry 3441 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: user_id_user_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.user_id_user_seq', 1, false);
+
+
+--
+-- TOC entry 3237 (class 2606 OID 33838)
+-- Name: client Client_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client
+    ADD CONSTRAINT "Client_pkey" PRIMARY KEY (id_client);
+
+
+--
+-- TOC entry 3241 (class 2606 OID 33840)
+-- Name: employee Employee_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.employee
+    ADD CONSTRAINT "Employee_pkey" PRIMARY KEY (id_employee);
+
+
+--
+-- TOC entry 3245 (class 2606 OID 33842)
+-- Name: goods Goods_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.goods
+    ADD CONSTRAINT "Goods_pkey" PRIMARY KEY (id_goods);
+
+
+--
+-- TOC entry 3249 (class 2606 OID 33844)
+-- Name: payments Payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT "Payments_pkey" PRIMARY KEY (id_payments);
+
+
+--
+-- TOC entry 3243 (class 2606 OID 33846)
+-- Name: position Position_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public."position"
+    ADD CONSTRAINT "Position_pkey" PRIMARY KEY (id_position);
+
+
+--
+-- TOC entry 3239 (class 2606 OID 33848)
+-- Name: user User_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public."user"
+    ADD CONSTRAINT "User_pkey" PRIMARY KEY (id_user);
+
+
+--
+-- TOC entry 3247 (class 2606 OID 33850)
+-- Name: operations_history operations_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operations_history
+    ADD CONSTRAINT operations_history_pkey PRIMARY KEY (id_operation);
+
+
+--
+-- TOC entry 3251 (class 2606 OID 33852)
+-- Name: storage storage_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.storage
+    ADD CONSTRAINT storage_pkey PRIMARY KEY (id_storage);
+
+
+--
+-- TOC entry 3253 (class 2606 OID 33941)
+-- Name: warehouse warehouse_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.warehouse
+    ADD CONSTRAINT warehouse_pkey PRIMARY KEY (id_goods, id_storage);
+
+
+--
+-- TOC entry 3266 (class 2620 OID 33943)
+-- Name: operations_history make_operation_after; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER make_operation_after AFTER INSERT ON public.operations_history FOR EACH ROW EXECUTE FUNCTION public.make_operation();
+
+
+--
+-- TOC entry 3254 (class 2606 OID 33853)
+-- Name: client Client_idUser_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client
+    ADD CONSTRAINT "Client_idUser_fkey" FOREIGN KEY (id_user) REFERENCES public."user"(id_user) NOT VALID;
+
+
+--
+-- TOC entry 3255 (class 2606 OID 33858)
+-- Name: employee Employee_idPosition_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.employee
+    ADD CONSTRAINT "Employee_idPosition_fkey" FOREIGN KEY (id_position) REFERENCES public."position"(id_position) NOT VALID;
+
+
+--
+-- TOC entry 3256 (class 2606 OID 33863)
+-- Name: employee Employee_idUser_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.employee
+    ADD CONSTRAINT "Employee_idUser_fkey" FOREIGN KEY (id_user) REFERENCES public."user"(id_user) NOT VALID;
+
+
+--
+-- TOC entry 3260 (class 2606 OID 33868)
+-- Name: sales Sales_idClient_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales
+    ADD CONSTRAINT "Sales_idClient_fkey" FOREIGN KEY (id_client) REFERENCES public.client(id_client) NOT VALID;
+
+
+--
+-- TOC entry 3261 (class 2606 OID 33873)
+-- Name: sales Sales_idGoods_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales
+    ADD CONSTRAINT "Sales_idGoods_fkey" FOREIGN KEY (id_operations) REFERENCES public.operations_history(id_operation) NOT VALID;
+
+
+--
+-- TOC entry 3262 (class 2606 OID 33878)
+-- Name: sales Sales_idPayments_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales
+    ADD CONSTRAINT "Sales_idPayments_fkey" FOREIGN KEY (id_payments) REFERENCES public.payments(id_payments) NOT VALID;
+
+
+--
+-- TOC entry 3263 (class 2606 OID 33883)
+-- Name: sales Sales_idSaller_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales
+    ADD CONSTRAINT "Sales_idSaller_fkey" FOREIGN KEY (id_saller) REFERENCES public.employee(id_employee) NOT VALID;
+
+
+--
+-- TOC entry 3257 (class 2606 OID 33888)
+-- Name: operations_history operations_history_id_employee_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operations_history
+    ADD CONSTRAINT operations_history_id_employee_fkey FOREIGN KEY (id_employee) REFERENCES public.employee(id_employee) NOT VALID;
+
+
+--
+-- TOC entry 3258 (class 2606 OID 33893)
+-- Name: operations_history operations_history_id_goods_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operations_history
+    ADD CONSTRAINT operations_history_id_goods_fkey FOREIGN KEY (id_goods) REFERENCES public.goods(id_goods) NOT VALID;
+
+
+--
+-- TOC entry 3259 (class 2606 OID 33898)
+-- Name: operations_history operations_history_id_storage_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operations_history
+    ADD CONSTRAINT operations_history_id_storage_fkey FOREIGN KEY (id_storage) REFERENCES public.storage(id_storage) NOT VALID;
+
+
+--
+-- TOC entry 3264 (class 2606 OID 33903)
+-- Name: warehouse warehouse_id_goods_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.warehouse
+    ADD CONSTRAINT warehouse_id_goods_fkey FOREIGN KEY (id_goods) REFERENCES public.goods(id_goods) NOT VALID;
+
+
+--
+-- TOC entry 3265 (class 2606 OID 33908)
+-- Name: warehouse warehouse_id_storage_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.warehouse
+    ADD CONSTRAINT warehouse_id_storage_fkey FOREIGN KEY (id_storage) REFERENCES public.storage(id_storage) NOT VALID;
+
+
+-- Completed on 2022-03-27 21:45:53
+
+--
+-- PostgreSQL database dump complete
+--
+
